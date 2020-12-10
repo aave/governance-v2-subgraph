@@ -1,0 +1,55 @@
+{
+  "name": "governance-subgraph",
+  "version": "1.0.0",
+  "description": "This package contains governance subgraph for the Aave protocol",
+  "scripts": {
+    "dev-environment": "npm i && tail -f /dev/null",
+    "build": "graph build",
+    "prepare": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
+    "codegen": " npm run prepare && graph codegen --output-dir ./src/generated",
+    "create-template": "graph create aave/${NAME:-governance} --node ${NODE:-null}",
+    "create-local": "NODE=http://graph-node:8020 npm run create-template",
+    "create-k8s": "NODE=http://localhost:8020 npm run create-template",
+    "deploy-template": "npm run prepare && graph deploy aave/${NAME:-governance} --ipfs ${IPFS:-null} --node ${NODE:-null}",
+    "deploy-local": "NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
+    "deploy-local-ropsten": "NETWORK=ropsten NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
+    "deploy-k8s": "NETWORK=mainnet NODE=http://localhost:8020 IPFS=http://localhost:5001 npm run deploy-template",
+    "deploy-remote-template": "NODE=https://api.thegraph.com/deploy/ IPFS=https://api.thegraph.com/ipfs/ npm run deploy-template",
+    "deploy-remote-ropsten": "NETWORK=ropsten  NAME=governance-ropsten-v1 npm run deploy-remote-template",
+    "deploy-remote-kovan": "NETWORK=kovan NAME=governance-kovan-v1 npm run deploy-remote-template",
+    "deploy-remote-main": "NETWORK=mainnet NAME=governance-v1 npm run deploy-remote-template",
+    "deploy-all-multy-remote": "npm run deploy-remote-main && npm run deploy-remote-ropsten && npm run deploy-remote-kovan"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:aave/aave-protocol.git"
+  },
+  "author": "AAVE <tech@aave.com>",
+  "contributors": [
+    {
+      "name": "Andrey Kozlov",
+      "email": "andrey@aave.com"
+    },
+    {
+      "name": "Emilio Frangella",
+      "email": "emilio@aave.com"
+    },
+    {
+      "name": "Ernesto Boado",
+      "email": "ernesto@aave.com"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "3.5.3"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.18.0",
+    "@graphprotocol/graph-ts": "^0.18.1",
+    "mustache": "^3.1.0",
+    "prettier": "^1.18.2",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1"
+  }
+}

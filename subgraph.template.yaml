@@ -1,0 +1,35 @@
+specVersion: 0.0.2
+description: Aave protocol subgraph with all pool data
+repository: https://github.com/graphprotocol/governance-v2
+schema:
+  file: ./src/schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: AaveGovernanceV2
+    network: {{network}}
+    source:
+      abi: AaveGovernanceV2
+      address: '{{aaveGovernanceV2Address}}'
+      startBlock: {{aaveGovernanceV2StartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Proposal
+        - Vote
+      abis:
+        - name: AaveGovernanceV2
+          file: ./abis/AaveGovernanceV2.json
+      eventHandlers:
+        - event: ProposalCreated(uint256,indexed address,indexed address,address[],uint256[],string[],bytes[],bool[],uint256,uint256,address,bytes32)
+          handler: handleProposalCreated
+        - event: ProposalCanceled(uint256)
+          handler: handleProposalCanceled
+        - event: ProposalQueued(uint256,uint256,indexed address)
+          handler: handleProposalQueued
+        - event: ProposalExecuted(uint256,indexed address)
+          handler: handleProposalExecuted
+        - event: VoteEmitted(uint256,indexed address,bool,uint256)
+          handler: handleVoteEmitted
+      file: ./src/mapping/governance.ts

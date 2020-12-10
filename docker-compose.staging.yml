@@ -1,0 +1,6 @@
+version: '3.5'
+
+services:
+  graph-node:
+    environment:
+      ethereum: "ropsten:https://eth-ropsten.alchemyapi.io/v2/7Z5A-LJmMmYM760nd9Nqr77F1wxwBYd7"

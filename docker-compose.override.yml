@@ -1,0 +1,28 @@
+version: '3.5'
+
+services:
+  thegraph-env:
+    depends_on:
+      - ganache
+    environment:
+      TARGET: "dev"
+      GANACHE_URL: "http://ganache:8545"
+
+  graph-node:
+    depends_on:
+      - ganache
+    environment:
+      ethereum: "mainnet:http://ganache:8545"
+
+  ganache:
+    image: trufflesuite/ganache-cli:next
+    logging:
+      driver: none
+    ports:
+      - "8545:8545"
+    command: [
+        "ganache-cli",
+        "--gasLimit", "8000000",
+        "--mnemonic", "frame post antenna before valid claw crunch clap travel buyer inch act",
+        "--hardfork", "istanbul"
+    ]
