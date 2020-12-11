@@ -1,0 +1,5 @@
+{
+  "network": "ropsten",
+  "aaveGovernanceV2Address": "0x0000000000000000000000000000000000000000",
+  "aaveGovernanceV2StartBlock": 1
+}

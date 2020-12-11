@@ -1,0 +1,81 @@
+enum ProposalState {
+    Pending
+    Active
+    Succeeded
+    Failed
+    Canceled
+    Queued
+    Executed
+  }
+
+enum Winner {
+  Yes
+  No
+  Abstain
+  Na
+}
+
+type Proposal @entity {
+  """proposal id"""
+  id: ID!
+  state: ProposalState!
+  ipfsHash: String!
+  creator: Bytes!
+  executor: Bytes!
+  targets: [Bytes!]
+  values: [BigInt!]
+  signatures: [String!]
+  calldatas: [Bytes!]
+  withDelegatecalls: [Boolean!]
+  startBlock: BigInt!
+  endBlock: BigInt!
+  governanceStrategy: Bytes!
+  currentYesVote: BigInt!
+  currentNoVote: BigInt!
+  winner: Winner!
+  votes: [Vote!]! @derivedFrom(field: "proposal")
+  createdTimestamp: Int!
+  executionTime: BigInt
+  initiatorQueueing: Bytes
+  initiatorExecution: Bytes
+  lastUpdateTimestamp: Int!
+  lastUpdateBlock: BigInt!
+  title: String
+  shortDescription: String
+  # voteTimestamp: Int!
+  # voteBlock: BigInt!
+  # validateTimestamp: Int!
+  # validateBlock: BigInt!
+  # executeTimestamp: Int!
+  # executeBlock: BigInt!
+}
+
+type Vote @entity {
+  """ voter:proposalid """
+  id: ID!
+  proposal: Proposal!
+  voter: Bytes!
+  support: Boolean!
+  votingPower: BigInt!
+  timestamp: Int!
+}
+
+
+# type PropositionPowerTransfer @entity {
+#   """ transaction hash """
+#   id: ID!
+#   from: Bytes!
+#   to: Bytes!
+#   value: BigInt!
+#   timestamp: Int!
+# }
+
+# type GovernanceSummary @entity {
+#   """ zero bytes """
+#   id: ID!
+#   totalProposalsCreated: Int!
+#   totalVotingProposals: Int!
+#   totalValidatingProposals: Int!
+#   totalExecutedProposals: Int!
+#   lastUpdateTimestamp: Int!
+# }

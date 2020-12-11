@@ -1,0 +1,5 @@
+{
+  "network": "mainnet",
+  "aaveGovernanceV2Address": "0x0000000000000000000000000000000000000001",
+  "aaveGovernanceV2StartBlock": 1
+}
