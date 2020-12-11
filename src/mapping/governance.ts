@@ -14,6 +14,9 @@ import { Proposal, Vote } from '../generated/schema';
 import {
   ProposalCreated,
   VoteEmitted,
+  ProposalQueued,
+  ProposalExecuted,
+  ProposalCanceled,
 } from '../generated/AaveGovernanceV2/AaveGovernanceV2';
 import {
   PROPOSAL_STATUS_VOTING,
@@ -76,6 +79,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.withDelegatecalls = event.params.withDelegatecalls;
   proposal.startBlock = event.params.startBlock;
   proposal.endBlock = event.params.endBlock;
+  proposal.state = 'Pending';
   proposal.governanceStrategy = event.params.strategy;
   proposal.ipfsHash = hash;
   proposal.winner = NA;
@@ -85,6 +89,38 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.save();
 }
 
+export function handleProposalQueued(event: ProposalQueued): void {
+  let proposal = getProposal(event.params.id.toString(), 'ProposalQueued');
+  if (proposal) {
+    proposal.state = 'Queued';
+    proposal.executionTime = event.params.executionTime;
+    proposal.initiatorQueueing = event.params.initiatorQueueing;
+    proposal.lastUpdateBlock = event.block.number;
+    proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+    proposal.save();
+  }
+}
+
+export function handleProposalExecuted(event: ProposalExecuted): void {
+  let proposal = getProposal(event.params.id.toString(), 'ProposalExecuted');
+  if (proposal) {
+    proposal.state = 'Executed';
+    proposal.initiatorExecution = event.params.initiatorExecution;
+    proposal.lastUpdateBlock = event.block.number;
+    proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+    proposal.save();
+  }
+}
+
+export function handleProposalCanceled(event: ProposalCanceled): void {
+  let proposal = getProposal(event.params.id.toString(), 'ProposalCanceled');
+  if (proposal) {
+    proposal.state = 'Canceled';
+    proposal.lastUpdateBlock = event.block.number;
+    proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+    proposal.save();
+  }
+}
 
 export function handleVoteEmitted(event: VoteEmitted): void {
   let proposal = getProposal(event.params.id.toString(), 'handleVoteEmitted');
@@ -98,6 +134,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     }
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+    proposal.state = "Active";
     proposal.save();
   }
 

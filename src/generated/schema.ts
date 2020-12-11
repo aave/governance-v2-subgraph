@@ -42,6 +42,15 @@ export class Proposal extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get state(): string {
+    let value = this.get("state");
+    return value.toString();
+  }
+
+  set state(value: string) {
+    this.set("state", Value.fromString(value));
+  }
+
   get ipfsHash(): string {
     let value = this.get("ipfsHash");
     return value.toString();
@@ -227,6 +236,57 @@ export class Proposal extends Entity {
 
   set createdTimestamp(value: i32) {
     this.set("createdTimestamp", Value.fromI32(value));
+  }
+
+  get executionTime(): BigInt | null {
+    let value = this.get("executionTime");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set executionTime(value: BigInt | null) {
+    if (value === null) {
+      this.unset("executionTime");
+    } else {
+      this.set("executionTime", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get initiatorQueueing(): Bytes | null {
+    let value = this.get("initiatorQueueing");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set initiatorQueueing(value: Bytes | null) {
+    if (value === null) {
+      this.unset("initiatorQueueing");
+    } else {
+      this.set("initiatorQueueing", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get initiatorExecution(): Bytes | null {
+    let value = this.get("initiatorExecution");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set initiatorExecution(value: Bytes | null) {
+    if (value === null) {
+      this.unset("initiatorExecution");
+    } else {
+      this.set("initiatorExecution", Value.fromBytes(value as Bytes));
+    }
   }
 
   get lastUpdateTimestamp(): i32 {

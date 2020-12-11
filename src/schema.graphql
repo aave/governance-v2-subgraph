@@ -1,9 +1,9 @@
-enum ProposalStatus {
+enum ProposalState {
     Pending
     Active
     Succeeded
     Failed
-    Cancelled
+    Canceled
     Queued
     Executed
   }
@@ -18,6 +18,7 @@ enum Winner {
 type Proposal @entity {
   """proposal id"""
   id: ID!
+  state: ProposalState!
   ipfsHash: String!
   creator: Bytes!
   executor: Bytes!
@@ -34,6 +35,9 @@ type Proposal @entity {
   winner: Winner!
   votes: [Vote!]! @derivedFrom(field: "proposal")
   createdTimestamp: Int!
+  executionTime: BigInt
+  initiatorQueueing: Bytes
+  initiatorExecution: Bytes
   lastUpdateTimestamp: Int!
   lastUpdateBlock: BigInt!
   title: String
