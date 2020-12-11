@@ -70,9 +70,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   }
   proposal.creator = event.params.creator;
   proposal.executor = event.params.executor;
-  // for (let i = 0; i<event.params.targets.length;) {
-  //   proposal.targets = [...proposal.targets || [""], event.params.targets[i].toI32() as Bytes];
-  // } 
+  proposal.targets = event.params.targets as Bytes[];
   proposal.values = event.params.values;
   proposal.signatures = event.params.signatures;
   proposal.calldatas = event.params.calldatas;
