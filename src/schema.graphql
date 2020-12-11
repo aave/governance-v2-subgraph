@@ -42,7 +42,6 @@ type Proposal @entity {
   lastUpdateBlock: BigInt!
   title: String
   shortDescription: String
-  # voteTimestamp: Int!
   # voteBlock: BigInt!
   # validateTimestamp: Int!
   # validateBlock: BigInt!
