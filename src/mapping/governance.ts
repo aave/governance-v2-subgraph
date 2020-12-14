@@ -10,21 +10,19 @@ import {
   ethereum,
 } from '@graphprotocol/graph-ts/index';
 
-import { Proposal, Vote } from '../generated/schema';
+import { Proposal, Vote, Executor } from '../generated/schema';
+import { IExecutor } from '../generated/AaveGovernanceV2/IExecutor'
 import {
   ProposalCreated,
   VoteEmitted,
   ProposalQueued,
   ProposalExecuted,
   ProposalCanceled,
+  ExecutorAuthorized,
+  ExecutorUnauthorized,
+  GovernanceStrategyChanged
 } from '../generated/AaveGovernanceV2/AaveGovernanceV2';
 import {
-  PROPOSAL_STATUS_VOTING,
-  PROPOSAL_STATUS_EXECUTED,
-  PROPOSAL_STATUS_VALIDATING,
-  YES_WINS,
-  NO_WINS,
-  ABSTAIN_WINS,
   NA,
 } from '../utils/constants';
 // import { zeroAddress, zeroBI } from '../utils/converters';
@@ -69,7 +67,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
     proposal.shortDescription = NA;
   }
   proposal.creator = event.params.creator;
-  proposal.executor = event.params.executor;
+  proposal.executor = event.params.executor.toString();
   proposal.targets = event.params.targets as Bytes[];
   proposal.values = event.params.values;
   proposal.signatures = event.params.signatures;
@@ -83,6 +81,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.winner = NA;
   // dont have access to event.block, not sure why
   proposal.lastUpdateBlock = event.block.number;
+  proposal.createdTimestamp = event.block.timestamp.toI32();
   proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
   proposal.save();
 }
@@ -145,3 +144,35 @@ export function handleVoteEmitted(event: VoteEmitted): void {
   vote.timestamp = event.block.timestamp.toI32();
   vote.save();
 }
+
+export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
+  let executor = Executor.load(event.params.executor.toString());
+  if (executor) {
+    executor.authorized = true;
+  } else {
+    executor = new Executor(event.params.executor.toString());
+    let executorContract =  IExecutor.bind(event.params.executor);
+    executor.authorized = true;
+    executor.propositionThreshold = executorContract.PROPOSITION_THRESHOLD();
+    executor.votingDuration = executorContract.VOTING_DURATION();
+    executor.voteDifferential = executorContract.VOTE_DIFFERENTIAL();
+    executor.gracePeriod = executorContract.GRACE_PERIOD();
+    executor.minimumQuorum = executorContract.MINIMUM_QUORUM();
+    executor.executionDelay = executorContract.getDelay();
+    executor.admin = executorContract.getAdmin();
+    executor.pendingAdmin = executorContract.getPendingAdmin();
+    executor.authorizationBlock = event.block.number;
+    executor.authorizationTimestamp = event.block.timestamp;
+  }
+  executor.save();
+}
+export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
+  let executor = Executor.load(event.params.executor.toString());
+  if (executor) {
+    executor.authorized = false;
+    executor.save();
+  } 
+}
+// export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
+  
+// }

@@ -12,6 +12,144 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
+export class Executor extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Executor entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Executor entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Executor", id.toString(), this);
+  }
+
+  static load(id: string): Executor | null {
+    return store.get("Executor", id) as Executor | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get authorized(): boolean {
+    let value = this.get("authorized");
+    return value.toBoolean();
+  }
+
+  set authorized(value: boolean) {
+    this.set("authorized", Value.fromBoolean(value));
+  }
+
+  get propositionThreshold(): BigInt {
+    let value = this.get("propositionThreshold");
+    return value.toBigInt();
+  }
+
+  set propositionThreshold(value: BigInt) {
+    this.set("propositionThreshold", Value.fromBigInt(value));
+  }
+
+  get votingDuration(): BigInt {
+    let value = this.get("votingDuration");
+    return value.toBigInt();
+  }
+
+  set votingDuration(value: BigInt) {
+    this.set("votingDuration", Value.fromBigInt(value));
+  }
+
+  get voteDifferential(): BigInt {
+    let value = this.get("voteDifferential");
+    return value.toBigInt();
+  }
+
+  set voteDifferential(value: BigInt) {
+    this.set("voteDifferential", Value.fromBigInt(value));
+  }
+
+  get minimumQuorum(): BigInt {
+    let value = this.get("minimumQuorum");
+    return value.toBigInt();
+  }
+
+  set minimumQuorum(value: BigInt) {
+    this.set("minimumQuorum", Value.fromBigInt(value));
+  }
+
+  get gracePeriod(): BigInt {
+    let value = this.get("gracePeriod");
+    return value.toBigInt();
+  }
+
+  set gracePeriod(value: BigInt) {
+    this.set("gracePeriod", Value.fromBigInt(value));
+  }
+
+  get executionDelay(): BigInt {
+    let value = this.get("executionDelay");
+    return value.toBigInt();
+  }
+
+  set executionDelay(value: BigInt) {
+    this.set("executionDelay", Value.fromBigInt(value));
+  }
+
+  get admin(): Bytes {
+    let value = this.get("admin");
+    return value.toBytes();
+  }
+
+  set admin(value: Bytes) {
+    this.set("admin", Value.fromBytes(value));
+  }
+
+  get authorizationBlock(): BigInt {
+    let value = this.get("authorizationBlock");
+    return value.toBigInt();
+  }
+
+  set authorizationBlock(value: BigInt) {
+    this.set("authorizationBlock", Value.fromBigInt(value));
+  }
+
+  get authorizationTimestamp(): BigInt {
+    let value = this.get("authorizationTimestamp");
+    return value.toBigInt();
+  }
+
+  set authorizationTimestamp(value: BigInt) {
+    this.set("authorizationTimestamp", Value.fromBigInt(value));
+  }
+
+  get pendingAdmin(): Bytes | null {
+    let value = this.get("pendingAdmin");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set pendingAdmin(value: Bytes | null) {
+    if (value === null) {
+      this.unset("pendingAdmin");
+    } else {
+      this.set("pendingAdmin", Value.fromBytes(value as Bytes));
+    }
+  }
+}
+
 export class Proposal extends Entity {
   constructor(id: string) {
     super();
@@ -69,13 +207,21 @@ export class Proposal extends Entity {
     this.set("creator", Value.fromBytes(value));
   }
 
-  get executor(): Bytes {
+  get executor(): string | null {
     let value = this.get("executor");
-    return value.toBytes();
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
 
-  set executor(value: Bytes) {
-    this.set("executor", Value.fromBytes(value));
+  set executor(value: string | null) {
+    if (value === null) {
+      this.unset("executor");
+    } else {
+      this.set("executor", Value.fromString(value as string));
+    }
   }
 
   get targets(): Array<Bytes> | null {

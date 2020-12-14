@@ -15,13 +15,28 @@ enum Winner {
   Na
 }
 
+type Executor @entity {
+  id: ID!
+  authorized: Boolean!
+  propositionThreshold: BigInt!
+  votingDuration: BigInt!
+  voteDifferential: BigInt!
+  minimumQuorum: BigInt!
+  gracePeriod: BigInt!
+  executionDelay: BigInt!
+  admin: Bytes!
+  authorizationBlock: BigInt!
+  authorizationTimestamp: BigInt!
+  pendingAdmin: Bytes
+}
+
 type Proposal @entity {
   """proposal id"""
   id: ID!
   state: ProposalState!
   ipfsHash: String!
   creator: Bytes!
-  executor: Bytes!
+  executor: Executor
   targets: [Bytes!]
   values: [BigInt!]
   signatures: [String!]
@@ -48,6 +63,7 @@ type Proposal @entity {
   # executeTimestamp: Int!
   # executeBlock: BigInt!
 }
+
 
 type Vote @entity {
   """ voter:proposalid """
