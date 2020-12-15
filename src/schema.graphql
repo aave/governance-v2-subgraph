@@ -55,8 +55,8 @@ type Proposal @entity {
   initiatorExecution: Bytes
   lastUpdateTimestamp: Int!
   lastUpdateBlock: BigInt!
-  title: String
-  shortDescription: String
+  title: String!
+  shortDescription: String!
   # voteBlock: BigInt!
   # validateTimestamp: Int!
   # validateBlock: BigInt!

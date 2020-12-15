@@ -453,38 +453,22 @@ export class Proposal extends Entity {
     this.set("lastUpdateBlock", Value.fromBigInt(value));
   }
 
-  get title(): string | null {
+  get title(): string {
     let value = this.get("title");
-    if (value === null) {
-      return null;
-    } else {
-      return value.toString();
-    }
+    return value.toString();
   }
 
-  set title(value: string | null) {
-    if (value === null) {
-      this.unset("title");
-    } else {
-      this.set("title", Value.fromString(value as string));
-    }
+  set title(value: string) {
+    this.set("title", Value.fromString(value));
   }
 
-  get shortDescription(): string | null {
+  get shortDescription(): string {
     let value = this.get("shortDescription");
-    if (value === null) {
-      return null;
-    } else {
-      return value.toString();
-    }
+    return value.toString();
   }
 
-  set shortDescription(value: string | null) {
-    if (value === null) {
-      this.unset("shortDescription");
-    } else {
-      this.set("shortDescription", Value.fromString(value as string));
-    }
+  set shortDescription(value: string) {
+    this.set("shortDescription", Value.fromString(value));
   }
 }
 
