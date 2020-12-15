@@ -146,11 +146,11 @@ export function handleVoteEmitted(event: VoteEmitted): void {
 }
 
 export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
-  let executor = Executor.load(event.params.executor.toString());
+  let executor = Executor.load(event.params.executor.toHexString());
   if (executor) {
     executor.authorized = true;
   } else {
-    executor = new Executor(event.params.executor.toString());
+    executor = new Executor(event.params.executor.toHexString());
     let executorContract =  IExecutor.bind(event.params.executor);
     executor.authorized = true;
     executor.propositionThreshold = executorContract.PROPOSITION_THRESHOLD();
@@ -167,7 +167,7 @@ export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
   executor.save();
 }
 export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
-  let executor = Executor.load(event.params.executor.toString());
+  let executor = Executor.load(event.params.executor.toHexString());
   if (executor) {
     executor.authorized = false;
     executor.save();
