@@ -39,6 +39,4 @@ dataSources:
           handler: handleExecutorAuthorized
         - event: ExecutorUnauthorized(address)
           handler: handleExecutorUnauthorized
-        - event: GovernanceStrategyChanged(indexed address,indexed address)
-          handler: handleGovernanceStrategyChanged
       file: ./src/mapping/governance.ts
