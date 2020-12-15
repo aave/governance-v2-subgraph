@@ -1,6 +1,6 @@
 import { Bytes } from '@graphprotocol/graph-ts';
 import {
-  Proposal,
+  Proposal, Executor
 } from './generated/schema';
 import {
   zeroAddress,
@@ -17,7 +17,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.title = NA;
     proposal.shortDescription = NA;
     proposal.creator = Bytes.fromI32(0) as Bytes;
-    proposal.executor = Bytes.fromI32(0) as Bytes;
+    proposal.executor = NA;
     proposal.targets = [Bytes.fromI32(0) as Bytes];
     proposal.values = [zeroBI()];
     proposal.signatures = [NA];

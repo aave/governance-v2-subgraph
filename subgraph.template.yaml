@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 description: Aave governance V2 subgraph
-repository: https://github.com/graphprotocol/governance-v2
+repository: https://github.com/graphprotocol/governance-v2-subgraph
 schema:
   file: ./src/schema.graphql
 dataSources:
@@ -18,9 +18,12 @@ dataSources:
       entities:
         - Proposal
         - Vote
+        - Executor
       abis:
         - name: AaveGovernanceV2
           file: ./abis/AaveGovernanceV2.json
+        - name: IExecutor
+          file: ./abis/IExecutor.json
       eventHandlers:
         - event: ProposalCreated(uint256,indexed address,indexed address,address[],uint256[],string[],bytes[],bool[],uint256,uint256,address,bytes32)
           handler: handleProposalCreated
@@ -32,4 +35,10 @@ dataSources:
           handler: handleProposalExecuted
         - event: VoteEmitted(uint256,indexed address,bool,uint256)
           handler: handleVoteEmitted
+        - event: ExecutorAuthorized(address)
+          handler: handleExecutorAuthorized
+        - event: ExecutorUnauthorized(address)
+          handler: handleExecutorUnauthorized
+        - event: GovernanceStrategyChanged(indexed address,indexed address)
+          handler: handleGovernanceStrategyChanged
       file: ./src/mapping/governance.ts
