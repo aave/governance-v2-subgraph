@@ -67,7 +67,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
     proposal.shortDescription = NA;
   }
   proposal.creator = event.params.creator;
-  proposal.executor = event.params.executor.toString();
+  proposal.executor = event.params.executor.toHexString();
   proposal.targets = event.params.targets as Bytes[];
   proposal.values = event.params.values;
   proposal.signatures = event.params.signatures;
