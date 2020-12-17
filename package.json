@@ -17,7 +17,7 @@
     "deploy-remote-template": "NODE=https://api.thegraph.com/deploy/ IPFS=https://api.thegraph.com/ipfs/ npm run deploy-template",
     "deploy-remote-ropsten": "NETWORK=ropsten  NAME=governance-ropsten-v1 npm run deploy-remote-template",
     "deploy-remote-kovan": "NETWORK=kovan NAME=governance-v2-kovan npm run deploy-remote-template",
-    "deploy-remote-main": "NETWORK=mainnet NAME=governance-v1 npm run deploy-remote-template",
+    "deploy-remote-main": "NETWORK=mainnet NAME=governance-v2 npm run deploy-remote-template",
     "deploy-all-multy-remote": "npm run deploy-remote-main && npm run deploy-remote-ropsten && npm run deploy-remote-kovan"
   },
   "repository": {
