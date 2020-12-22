@@ -5,20 +5,19 @@
   "scripts": {
     "dev-environment": "npm i && tail -f /dev/null",
     "build": "graph build",
-    "prepare": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
-    "codegen": " npm run prepare && graph codegen --output-dir ./src/generated",
-    "create-template": "graph create aave/${NAME:-governance-v2} --node ${NODE:-null}",
-    "create-local": "NODE=http://graph-node:8020 npm run create-template",
-    "create-k8s": "NODE=http://localhost:8020 npm run create-template",
-    "deploy-template": "npm run prepare && graph deploy aave/${NAME:-governance-v2} --ipfs ${IPFS:-null} --node ${NODE:-null} --access-token b4cd97a728584e759a17d9651715e2c8 ",
-    "deploy-local": "NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
-    "deploy-local-ropsten": "NETWORK=ropsten NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
-    "deploy-k8s": "NETWORK=mainnet NODE=http://localhost:8020 IPFS=http://localhost:5001 npm run deploy-template",
-    "deploy-remote-template": "NODE=https://api.thegraph.com/deploy/ IPFS=https://api.thegraph.com/ipfs/ npm run deploy-template",
-    "deploy-remote-ropsten": "NETWORK=ropsten  NAME=governance-ropsten-v1 npm run deploy-remote-template",
-    "deploy-remote-kovan": "NETWORK=kovan NAME=governance-v2-kovan npm run deploy-remote-template",
-    "deploy-remote-main": "NETWORK=mainnet NAME=governance-v2 npm run deploy-remote-template",
-    "deploy-all-multy-remote": "npm run deploy-remote-main && npm run deploy-remote-ropsten && npm run deploy-remote-kovan"
+    "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
+    "prepare:subgraph": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
+    "prepare:contracts": "rm -rf externals && npm run submodule:get && npm run submodule:compile-contracts",
+    "submodule:get": "git submodule add -f https://gitlab+gov-submodules-access:BRsdxA144hdm1L4o9ESb@gitlab.com/aave-tech/governance-v2.git externals/governance-v2 && npm run submodule:install",
+    "submodule:install": " env-cmd npm run submodule:load && npm run submodule:npmi",
+    "submodule:load": "git submodule foreach npm run load:npm",
+    "submodule:npmi": "git submodule foreach npm install",
+    "submodule:compile-contracts": "git submodule foreach npm run compile",
+    "subgraph:codegen": "graph codegen --output-dir ./generated",
+    "subgraph:build": "graph build",
+    "subgraph:deploy:hosted": "graph deploy $SLUG --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token $ACCESS_TOKEN",
+    "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
+    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:hosted"   
   },
   "repository": {
     "type": "git",
@@ -46,10 +45,14 @@
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
     "@graphprotocol/graph-ts": "^0.18.1",
+    "env-cmd": "^10.1.0",
     "mustache": "^3.1.0",
-    "prettier": "^1.18.2",
-    "tslint": "^5.12.1",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.0.1"
+    "typescript": "3.5.3",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
+    "eslint": "^6.2.2",
+    "eslint-config-prettier": "^6.1.0",
+    "lint-staged": "^9.2.5",
+    "prettier": "^1.18.2"
   }
 }

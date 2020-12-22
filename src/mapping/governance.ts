@@ -1,18 +1,15 @@
 import {
-  BigInt,
   ipfs,
   json,
   Bytes,
   log,
   JSONValue,
   JSONValueKind,
-  Address,
-  ethereum,
 } from '@graphprotocol/graph-ts/index';
 
-import { Proposal, Vote, Executor } from '../generated/schema';
-import { IExecutor } from '../generated/AaveGovernanceV2/IExecutor';
-import { GovernanceStrategy } from '../generated/AaveGovernanceV2/GovernanceStrategy';
+import { Proposal, Vote, Executor } from '../../generated/schema';
+import { IExecutor } from '../../generated/AaveGovernanceV2/IExecutor';
+import { GovernanceStrategy } from '../../generated/AaveGovernanceV2/GovernanceStrategy';
 import {
   ProposalCreated,
   VoteEmitted,
@@ -21,20 +18,17 @@ import {
   ProposalCanceled,
   ExecutorAuthorized,
   ExecutorUnauthorized,
-  GovernanceStrategyChanged
-} from '../generated/AaveGovernanceV2/AaveGovernanceV2';
+} from '../../generated/AaveGovernanceV2/AaveGovernanceV2';
 import {
   NA,
 } from '../utils/constants';
-// import { zeroAddress, zeroBI } from '../utils/converters';
-import { getOrInitProposal } from '../initializers';
+import { getOrInitProposal } from '../helpers/initializers';
 
 enum VoteType {
   Abstain = 0,
   Yes = 1,
   No = 2,
 }
-
 
 function getProposal(proposalId: string, fn: string): Proposal | null {
   let proposal = Proposal.load(proposalId);
@@ -70,6 +64,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
 
   let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
   proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(event.params.startBlock);
+  proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
 
   proposal.govContract = event.address;
   proposal.creator = event.params.creator;
@@ -180,7 +175,5 @@ export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
     executor.save();
   } 
 }
-export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
-  let proposal = getProposal(event.address.toHexString(), 'handleGovernanceStrategyChanged');
-  
-}
+// export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
+// }

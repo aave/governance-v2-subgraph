@@ -1,0 +1,3 @@
+[submodule "externals/governance-v2"]
+	path = externals/governance-v2
+	url = https://gitlab+gov-submodules-access:BRsdxA144hdm1L4o9ESb@gitlab.com/aave-tech/governance-v2.git
