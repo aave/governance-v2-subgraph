@@ -57,6 +57,9 @@ type Proposal @entity {
   lastUpdateBlock: BigInt!
   title: String!
   shortDescription: String!
+  govContract: Bytes!
+  totalPropositionSupply: BigInt!
+  totalVotingSupply: BigInt!
   # voteBlock: BigInt!
   # validateTimestamp: Int!
   # validateBlock: BigInt!
