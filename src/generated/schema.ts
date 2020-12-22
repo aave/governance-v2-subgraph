@@ -470,6 +470,24 @@ export class Proposal extends Entity {
   set shortDescription(value: string) {
     this.set("shortDescription", Value.fromString(value));
   }
+
+  get govContract(): Bytes {
+    let value = this.get("govContract");
+    return value.toBytes();
+  }
+
+  set govContract(value: Bytes) {
+    this.set("govContract", Value.fromBytes(value));
+  }
+
+  get totalPropositionSupply(): BigInt {
+    let value = this.get("totalPropositionSupply");
+    return value.toBigInt();
+  }
+
+  set totalPropositionSupply(value: BigInt) {
+    this.set("totalPropositionSupply", Value.fromBigInt(value));
+  }
 }
 
 export class Vote extends Entity {

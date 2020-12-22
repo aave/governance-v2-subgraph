@@ -24,6 +24,8 @@ dataSources:
           file: ./abis/AaveGovernanceV2.json
         - name: IExecutor
           file: ./abis/IExecutor.json
+        - name: GovernanceStrategy
+          file: ./abis/GovernanceStrategy.json
       eventHandlers:
         - event: ProposalCreated(uint256,indexed address,indexed address,address[],uint256[],string[],bytes[],bool[],uint256,uint256,address,bytes32)
           handler: handleProposalCreated

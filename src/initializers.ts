@@ -1,4 +1,4 @@
-import { Bytes } from '@graphprotocol/graph-ts';
+import { Address, Bytes } from '@graphprotocol/graph-ts';
 import {
   Proposal, Executor
 } from './generated/schema';
@@ -7,7 +7,6 @@ import {
   zeroBI,
 } from './utils/converters';
 import { NA, PROPOSAL_STATUS_INITIALIZING } from './utils/constants';
-
 
 export function getOrInitProposal(proposalId: string): Proposal {
   let proposal = Proposal.load(proposalId);
@@ -33,6 +32,8 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.lastUpdateBlock = zeroBI();
     proposal.lastUpdateTimestamp = zeroBI().toI32();
     proposal.ipfsHash = NA;
+    proposal.govContract = zeroAddress();
+    proposal.totalPropositionSupply = zeroBI();
   }
 
   return proposal as Proposal;

@@ -10,7 +10,7 @@
     "create-template": "graph create aave/${NAME:-governance-v2} --node ${NODE:-null}",
     "create-local": "NODE=http://graph-node:8020 npm run create-template",
     "create-k8s": "NODE=http://localhost:8020 npm run create-template",
-    "deploy-template": "npm run prepare && graph deploy aave/${NAME:-governance-v2} --ipfs ${IPFS:-null} --node ${NODE:-null}",
+    "deploy-template": "npm run prepare && graph deploy aave/${NAME:-governance-v2} --ipfs ${IPFS:-null} --node ${NODE:-null} --access-token b4cd97a728584e759a17d9651715e2c8 ",
     "deploy-local": "NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
     "deploy-local-ropsten": "NETWORK=ropsten NODE=http://graph-node:8020 IPFS=http://graph-ipfs:5001 npm run deploy-template",
     "deploy-k8s": "NETWORK=mainnet NODE=http://localhost:8020 IPFS=http://localhost:5001 npm run deploy-template",

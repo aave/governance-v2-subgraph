@@ -11,7 +11,8 @@ import {
 } from '@graphprotocol/graph-ts/index';
 
 import { Proposal, Vote, Executor } from '../generated/schema';
-import { IExecutor } from '../generated/AaveGovernanceV2/IExecutor'
+import { IExecutor } from '../generated/AaveGovernanceV2/IExecutor';
+import { GovernanceStrategy } from '../generated/AaveGovernanceV2/GovernanceStrategy';
 import {
   ProposalCreated,
   VoteEmitted,
@@ -66,6 +67,11 @@ export function handleProposalCreated(event: ProposalCreated): void {
   } else {
     proposal.shortDescription = NA;
   }
+
+  let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
+  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(event.params.startBlock);
+
+  proposal.govContract = event.address;
   proposal.creator = event.params.creator;
   proposal.executor = event.params.executor.toHexString();
   proposal.targets = event.params.targets as Bytes[];
@@ -166,6 +172,7 @@ export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
   }
   executor.save();
 }
+
 export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
   let executor = Executor.load(event.params.executor.toHexString());
   if (executor) {
@@ -173,6 +180,7 @@ export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
     executor.save();
   } 
 }
-// export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
+export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
+  let proposal = getProposal(event.address.toHexString(), 'handleGovernanceStrategyChanged');
   
-// }
+}
