@@ -35,6 +35,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.govContract = zeroAddress();
     proposal.totalPropositionSupply = zeroBI();
     proposal.totalVotingSupply = zeroBI();
+    proposal.createdBlockNumber = zeroBI();
   }
 
   return proposal as Proposal;
