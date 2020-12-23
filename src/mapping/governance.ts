@@ -83,6 +83,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   // dont have access to event.block, not sure why
   proposal.lastUpdateBlock = event.block.number;
   proposal.createdTimestamp = event.block.timestamp.toI32();
+  proposal.createdBlockNumber = event.block.number;
   proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
   proposal.save();
 }

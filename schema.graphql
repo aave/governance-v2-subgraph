@@ -60,6 +60,7 @@ type Proposal @entity {
   govContract: Bytes!
   totalPropositionSupply: BigInt!
   totalVotingSupply: BigInt!
+  createdBlockNumber: BigInt!
   # voteBlock: BigInt!
   # validateTimestamp: Int!
   # validateBlock: BigInt!
