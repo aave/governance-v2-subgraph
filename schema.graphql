@@ -1,12 +1,12 @@
 enum ProposalState {
-    Pending
-    Active
-    Succeeded
-    Failed
-    Canceled
-    Queued
-    Executed
-  }
+  Pending
+  Active
+  Succeeded
+  Failed
+  Canceled
+  Queued
+  Executed
+}
 
 enum Winner {
   Yes
@@ -31,7 +31,9 @@ type Executor @entity {
 }
 
 type Proposal @entity {
-  """proposal id"""
+  """
+  proposal id
+  """
   id: ID!
   state: ProposalState!
   ipfsHash: String!
@@ -61,6 +63,7 @@ type Proposal @entity {
   totalPropositionSupply: BigInt!
   totalVotingSupply: BigInt!
   createdBlockNumber: BigInt!
+  totalCurrentVoters: Int!
   # voteBlock: BigInt!
   # validateTimestamp: Int!
   # validateBlock: BigInt!
@@ -68,9 +71,10 @@ type Proposal @entity {
   # executeBlock: BigInt!
 }
 
-
 type Vote @entity {
-  """ voter:proposalid """
+  """
+   voter:proposalid
+  """
   id: ID!
   proposal: Proposal!
   voter: Bytes!
@@ -78,7 +82,6 @@ type Vote @entity {
   votingPower: BigInt!
   timestamp: Int!
 }
-
 
 # type PropositionPowerTransfer @entity {
 #   """ transaction hash """
