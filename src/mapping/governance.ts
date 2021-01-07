@@ -131,6 +131,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     } else {
       proposal.currentNoVote = proposal.currentNoVote.plus(votingPower);
     }
+    proposal.totalCurrentVoters = proposal.totalCurrentVoters + 1;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
     proposal.state = "Active";
