@@ -8,7 +8,7 @@
     "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
     "prepare:subgraph": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
     "prepare:contracts": "rm -rf externals && npm run submodule:get && npm run submodule:compile-contracts",
-    "submodule:get": "git submodule add -f https://gitlab+gov-submodules-access:BRsdxA144hdm1L4o9ESb@gitlab.com/aave-tech/governance-v2.git externals/governance-v2 && npm run submodule:install",
+    "submodule:get": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2 && npm run submodule:install",
     "submodule:install": " env-cmd npm run submodule:load && npm run submodule:npmi",
     "submodule:load": "git submodule foreach npm run load:npm",
     "submodule:npmi": "git submodule foreach npm install",
