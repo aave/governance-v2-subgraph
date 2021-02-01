@@ -37,6 +37,9 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.totalVotingSupply = zeroBI();
     proposal.createdBlockNumber = zeroBI();
     proposal.totalCurrentVoters = 0;
+    proposal.author = NA;
+    proposal.discussions = NA;
+    proposal.aipNumber = NA;
   }
 
   return proposal as Proposal;

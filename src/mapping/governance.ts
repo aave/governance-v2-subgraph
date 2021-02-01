@@ -44,16 +44,40 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let proposalData = json.try_fromBytes(data as Bytes);
   let title: JSONValue | null = null;
   let shortDescription: JSONValue | null = null;
+  let author: JSONValue | null = null;
+  let aipNumber: JSONValue | null = null;
+  let discussions: JSONValue | null = null;
+
   if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
     let data = proposalData.value.toObject();
     title = data.get('title');
     shortDescription = data.get('shortDescription');
+    author = data.get('author');
+    discussions = data.get('discussions');
+    aipNumber = data.get('aip');
   }
   let proposal = getOrInitProposal(event.params.id.toString());
   if (title) {
     proposal.title = title.toString();
   } else {
     proposal.title = NA;
+  }
+  if (author) {
+    proposal.author = author.toString();
+  } else {
+    proposal.author = NA;
+  }
+  if (discussions) {
+    proposal.discussions = discussions.toString();
+  } else {
+    proposal.discussions = NA;
+  }
+  if (aipNumber) {
+    if (aipNumber.kind == JSONValueKind.STRING) {
+      proposal.aipNumber = aipNumber.toString();
+    } else { proposal.aipNumber = NA; }
+  } else {
+    proposal.aipNumber = NA;
   }
 
   if (shortDescription) {
