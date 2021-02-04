@@ -39,7 +39,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.totalCurrentVoters = 0;
     proposal.author = NA;
     proposal.discussions = NA;
-    proposal.aipNumber = NA;
+    proposal.aipNumber = zeroBI();
   }
 
   return proposal as Proposal;

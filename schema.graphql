@@ -64,7 +64,7 @@ type Proposal @entity {
   totalVotingSupply: BigInt!
   createdBlockNumber: BigInt!
   totalCurrentVoters: Int!
-  aipNumber: String!
+  aipNumber: BigInt!
   author: String!
   discussions: String!
   # voteBlock: BigInt!
