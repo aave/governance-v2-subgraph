@@ -9,7 +9,7 @@
     "prepare:subgraph": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
     "prepare:contracts": "rm -rf externals && npm run submodule:get && npm run submodule:compile-contracts",
     "submodule:get": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2 && npm run submodule:install",
-    "submodule:install": " env-cmd npm run submodule:load && npm run submodule:npmi",
+    "submodule:install": "npm run submodule:npmi",
     "submodule:load": "git submodule foreach npm run load:npm",
     "submodule:npmi": "git submodule foreach npm install",
     "submodule:compile-contracts": "git submodule foreach npm run compile",
@@ -17,7 +17,7 @@
     "subgraph:build": "graph build",
     "subgraph:deploy:hosted": "graph deploy $SLUG --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token $ACCESS_TOKEN",
     "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
-    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:hosted"   
+    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:hosted"
   },
   "repository": {
     "type": "git",
