@@ -38,6 +38,7 @@ type Proposal @entity {
   state: ProposalState!
   ipfsHash: String!
   creator: Bytes!
+  creatorDelegate: Delegate!
   executor: Executor
   targets: [Bytes!]
   values: [BigInt!]
@@ -76,11 +77,12 @@ type Proposal @entity {
 
 type Vote @entity {
   """
-   voter:proposalid
+  voter:proposalid
   """
   id: ID!
   proposal: Proposal!
   voter: Bytes!
+  voterDelegate: Delegate!
   support: Boolean!
   votingPower: BigInt!
   timestamp: Int!
@@ -104,3 +106,64 @@ type Vote @entity {
 #   totalExecutedProposals: Int!
 #   lastUpdateTimestamp: Int!
 # }
+
+# Address which holds governance tokens (AAVE, stkAAVE) or has been delegated voting or proposition power from another address
+type Delegate @entity {
+  "Wallet address"
+  id: ID!
+
+  "aaveDelegatedVotingPower + stkAaveDelegatedVotingPower"
+  totalVotingPowerRaw: BigInt!
+  totalVotingPower: BigDecimal!
+
+  "aaveDelegatedPropositionPower + stkAaveDelegatedPropositionPower"
+  totalPropositionPowerRaw: BigInt!
+  totalPropositionPower: BigDecimal!
+
+  "Wallet balance of AAVE token"
+  aaveBalanceRaw: BigInt!
+  aaveBalance: BigDecimal!
+
+  "Wallet balance of stkAAVE token"
+  stkAaveBalanceRaw: BigInt!
+  stkAaveBalance: BigDecimal!
+
+  "Votes which this delegated has participated in"
+  votes: [Vote!]! @derivedFrom(field: "voterDelegate")
+
+  "Proposals which this delegate has created"
+  proposals: [Proposal!]! @derivedFrom(field: "creatorDelegate")
+
+  "Delegate who will vote on your behalf"
+  votingDelegate: Delegate!
+  propositionDelegate: Delegate!
+
+  "AAVE voting power delegated to this address"
+  aaveDelegatedVotingPowerRaw: BigInt!
+  aaveDelegatedVotingPower: BigDecimal!
+
+  "stkAAVE voting power delegated to this address"
+  stkAaveDelegatedVotingPowerRaw: BigInt!
+  stkAaveDelegatedVotingPower: BigDecimal!
+
+  "AAVE proposition power delegated to this address"
+  aaveDelegatedPropositionPowerRaw: BigInt!
+  aaveDelegatedPropositionPower: BigDecimal!
+
+  "stkAAVE proposition power delegated to this address"
+  stkAaveDelegatedPropositionPowerRaw: BigInt!
+  stkAaveDelegatedPropositionPower: BigDecimal!
+
+  "Number of users represented for voting"
+  usersVotingRepresentedAmount: Int!
+  "Number of users represented for creating proposals"
+  usersPropositionRepresentedAmount: Int!
+
+  # "Array of ids (addresses) which this delegate represents"
+  #  usersVotingRepresentedIds: [String!]!
+  #  usersPropositionRepresentedIds: [String!]!
+
+  #  "Array of delegates (users) which this delegate represents"
+  #  usersVotingRepresented: [Delegate!]! @derivedFrom(field: "votingDelegate")
+  #  usersPropositionRepresented: [Delegate!]! @derivedFrom(field: "propositionDelegate")
+}
