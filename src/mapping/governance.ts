@@ -22,7 +22,7 @@ import {
 import {
   NA,
 } from '../utils/constants';
-import { getOrInitProposal } from '../helpers/initializers';
+import { getOrInitProposal, getOrInitDelegate } from '../helpers/initializers';
 
 enum VoteType {
   Abstain = 0,
@@ -47,6 +47,20 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let author: JSONValue | null = null;
   let aipNumber: JSONValue | null = null;
   let discussions: JSONValue | null = null;
+
+  let proposerDel = getOrInitDelegate(event.params.creator.toHexString(), false);
+  
+  // checking if the proposer was a delegate already accounted for, if not we should log an error
+  // since it shouldn't be possible for a delegate to propose anything without first being "created"
+  if (proposerDel == null) {
+    log.error("Delegate {} not found on ProposalCreated. tx_hash: {}", [
+      event.params.creator.toHexString(),
+      event.transaction.hash.toHexString(),
+    ]);
+  }
+
+  // Creating it anyway since we will want to account for this event data, even though it should've never happened
+  proposerDel = getOrInitDelegate(event.params.creator.toHexString());
 
   if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
     let data = proposalData.value.toObject();
@@ -105,6 +119,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.createdTimestamp = event.block.timestamp.toI32();
   proposal.createdBlockNumber = event.block.number;
   proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+  proposal.creatorDelegate = proposerDel.id;
   proposal.save();
 }
 
@@ -158,6 +173,20 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     proposal.save();
   }
 
+  let voterDel = getOrInitDelegate(event.params.voter.toHexString(), false);
+
+  // checking if the voter was a delegate already accounted for, if not we should log an error
+  // since it shouldn't be possible for a delegate to vote without first being "created"
+  if (voterDel == null) {
+    log.error("Delegate {} not found on VoteCast. tx_hash: {}", [
+      event.params.voter.toHexString(),
+      event.transaction.hash.toHexString(),
+    ]);
+  }
+
+  // Creating it anyway since we will want to account for this event data, even though it should've never happened
+  voterDel = getOrInitDelegate(event.params.voter.toHexString());
+
   let id = event.params.voter.toHexString() + ':' + event.params.id.toString();
   let vote = Vote.load(id) || new Vote(id);
   vote.proposal = event.params.id.toString();
@@ -165,6 +194,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
   vote.voter = event.params.voter;
   vote.votingPower = event.params.votingPower;
   vote.timestamp = event.block.timestamp.toI32();
+  vote.voterDelegate = voterDel.id;
   vote.save();
 }
 
