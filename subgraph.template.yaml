@@ -42,3 +42,29 @@ dataSources:
         - event: ExecutorUnauthorized(address)
           handler: handleExecutorUnauthorized
       file: ./src/mapping/governance.ts
+  - kind: ethereum/contract
+    name: AaveTokenV2
+    network: {{network}}
+    source:
+      abi: AaveTokenV2
+      address: "{{aaveTokenV2Address}}"
+      startBlock: {{aaveTokenV2StartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - TokenHolder
+        - Delegate
+        - Governance
+      abis:
+        - name: AaveTokenV2
+          file: ./externals/aave-token-v2/artifacts/contracts/token/AaveTokenV2.sol/AaveTokenV2.json
+      eventHandlers:
+        - event: DelegateChanged(indexed address,indexed address,uint8)
+          handler: handleDelegateChanged
+        - event: DelegatedPowerChanged(indexed address,uint256,uint8)
+          handler: handleDelegatedPowerChanged
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping/aave-token.ts

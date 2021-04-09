@@ -1,3 +1,6 @@
 [submodule "externals/governance-v2"]
 	path = externals/governance-v2
 	url = https://github.com/aave/governance-v2.git
+[submodule "externals/aave-token-v2"]
+	path = externals/aave-token-v2
+	url = https://github.com/aave/aave-token-v2.git
