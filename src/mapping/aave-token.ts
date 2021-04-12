@@ -40,27 +40,6 @@ export function handleTransfer(event: Transfer): void {
   toHolder.aaveBalanceRaw = toHolder.aaveBalanceRaw.plus(event.params.value);
   toHolder.aaveBalance = toDecimal(toHolder.aaveBalanceRaw);
 
-
-  // create voting and proposition delegates if not set yet, as in aave, a tokenholder is its own delegate by default
-  if (toHolder.votingDelegate == null) {
-    let newDelegate = getOrInitDelegate(event.params.to.toHexString());
-    newDelegate.aaveDelegatedVotingPowerRaw = newDelegate.aaveDelegatedVotingPowerRaw.plus(toHolder.aaveBalanceRaw);
-    newDelegate.aaveDelegatedVotingPower = newDelegate.aaveDelegatedVotingPower.plus(toHolder.aaveBalance);
-    newDelegate.totalVotingPowerRaw = newDelegate.aaveDelegatedVotingPowerRaw.plus(newDelegate.stkAaveDelegatedVotingPowerRaw);
-    newDelegate.totalVotingPower = newDelegate.aaveDelegatedVotingPower.plus(newDelegate.stkAaveDelegatedVotingPower);
-    newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1;
-    toHolder.votingDelegate = newDelegate.id;
-  }
-  if (toHolder.propositionDelegate == null) {
-    let newDelegate = getOrInitDelegate(event.params.to.toHexString());
-    newDelegate.aaveDelegatedPropositionPowerRaw = newDelegate.aaveDelegatedPropositionPowerRaw.plus(toHolder.aaveBalanceRaw);
-    newDelegate.aaveDelegatedPropositionPower = newDelegate.aaveDelegatedPropositionPower.plus(toHolder.aaveBalance);
-    newDelegate.totalPropositionPowerRaw = newDelegate.aaveDelegatedPropositionPowerRaw.plus(newDelegate.stkAaveDelegatedPropositionPowerRaw);
-    newDelegate.totalPropositionPower = newDelegate.aaveDelegatedPropositionPower.plus(newDelegate.stkAaveDelegatedPropositionPower);
-    newDelegate.usersPropositionRepresentedAmount = newDelegate.usersPropositionRepresentedAmount + 1;
-    toHolder.propositionDelegate = newDelegate.id;
-  }
-
   toHolder.save();
 }
 
@@ -96,6 +75,8 @@ export function handleDelegatedPowerChanged(
 
     delegate.aaveDelegatedVotingPowerRaw = amount;
     delegate.aaveDelegatedVotingPower = toDecimal(amount);
+    delegate.totalVotingPowerRaw = delegate.stkAaveDelegatedVotingPowerRaw.plus(delegate.aaveDelegatedVotingPowerRaw)
+    delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
     delegate.save();
 
   } else {
@@ -104,6 +85,8 @@ export function handleDelegatedPowerChanged(
 
     delegate.aaveDelegatedPropositionPowerRaw = amount;
     delegate.aaveDelegatedPropositionPower = toDecimal(amount);
+    delegate.totalPropositionPowerRaw = delegate.stkAaveDelegatedPropositionPowerRaw.plus(delegate.aaveDelegatedPropositionPowerRaw)
+    delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
     delegate.save();
   }
 }

@@ -16,7 +16,6 @@ import {
 export function getOrInitDelegate(
   id: string,
   createIfNotFound: boolean = true,
-  save: boolean = true
 ): Delegate {
   let delegate = Delegate.load(id);
 
@@ -53,9 +52,7 @@ export function getOrInitDelegate(
     delegate.votingDelegate = id
     delegate.propositionDelegate = id
 
-    if (save) {
-      delegate.save();
-    }
+    delegate.save();
   }
 
   return delegate as Delegate;

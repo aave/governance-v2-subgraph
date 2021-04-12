@@ -39,8 +39,10 @@ function getProposal(proposalId: string, fn: string): Proposal | null {
 }
 
 export function handleProposalCreated(event: ProposalCreated): void {
+  log.info("PROPOSAL CREATED",[])
   let hash = Bytes.fromHexString('1220' + event.params.ipfsHash.toHexString().slice(2)).toBase58();
   let data = ipfs.cat(hash);
+
   let proposalData = json.try_fromBytes(data as Bytes);
   let title: JSONValue | null = null;
   let shortDescription: JSONValue | null = null;
@@ -48,7 +50,20 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let aipNumber: JSONValue | null = null;
   let discussions: JSONValue | null = null;
 
+  log.info("hash: {}, data: {}, title: {}, description: {}, author: {}, aipNumber: {}, discussions: {}",[hash, data.toString(), title.toString(), shortDescription.toString(), author.toString(), aipNumber.toString(), discussions.toString() ])
+
+  if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
+    let data = proposalData.value.toObject();
+    title = data.get('title');
+    shortDescription = data.get('shortDescription');
+    author = data.get('author');
+    discussions = data.get('discussions');
+    aipNumber = data.get('aip');
+  }
+  let proposal = getOrInitProposal(event.params.id.toString());
   let proposerDel = getOrInitDelegate(event.params.creator.toHexString(), false);
+
+  log.info("Created proposal and delegate",[])
   
   // checking if the proposer was a delegate already accounted for, if not we should log an error
   // since it shouldn't be possible for a delegate to propose anything without first being "created"
@@ -60,17 +75,8 @@ export function handleProposalCreated(event: ProposalCreated): void {
   }
 
   // Creating it anyway since we will want to account for this event data, even though it should've never happened
+  log.info("CREATOR: {}",[event.params.creator.toHexString()])
   proposerDel = getOrInitDelegate(event.params.creator.toHexString());
-
-  if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
-    let data = proposalData.value.toObject();
-    title = data.get('title');
-    shortDescription = data.get('shortDescription');
-    author = data.get('author');
-    discussions = data.get('discussions');
-    aipNumber = data.get('aip');
-  }
-  let proposal = getOrInitProposal(event.params.id.toString());
   if (title) {
     proposal.title = title.toString();
   } else {
@@ -97,6 +103,9 @@ export function handleProposalCreated(event: ProposalCreated): void {
   }
 
   let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
+
+  log.info("Create governance strategy",[])
+
   proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(event.params.startBlock);
   proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
 
@@ -172,6 +181,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     proposal.state = "Active";
     proposal.save();
   }
+
 
   let voterDel = getOrInitDelegate(event.params.voter.toHexString(), false);
 
