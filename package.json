@@ -6,7 +6,7 @@
     "dev-environment": "npm i && tail -f /dev/null",
     "build": "graph build",
     "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
-    "prepare:subgraph": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
+    "prepare:subgraph": "mustache ./config/${NETWORK:-dev}.json subgraph.template.yaml > subgraph.yaml",
     "prepare:contracts": "rm -rf externals && npm run submodule:get && npm run submodule:compile-contracts",
     "submodule:get": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2 && npm run submodule:install",
     "submodule:install": "npm run submodule:npmi",

@@ -18,8 +18,7 @@ npm run deploy:hosted:mainnet
 
 To be able to deploy the subgraph in any environment for any network first we will need to prepare the local env:
 
-- get the governance v2 contracts and compile them:
-You will need GITLAB_ACCESS_TOKEN to be able t install governance v2 repo dependencies
+- get the governance v2 contracts and compile them
 
 ```
 npm run prepare:contracts
