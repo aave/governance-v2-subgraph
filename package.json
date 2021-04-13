@@ -6,10 +6,11 @@
     "dev-environment": "npm i && tail -f /dev/null",
     "build": "graph build",
     "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
-    "prepare:subgraph": "cat ./config/${NETWORK:-dev}.json | mustache  - subgraph.template.yaml > subgraph.yaml",
-    "prepare:contracts": "rm -rf externals && npm run submodule:get:governance-v2 && npm run submodule:get:aave-token-v2 && npm run submodule:install && npm run submodule:compile-contracts",
+    "prepare:subgraph": "mustache ./config/${NETWORK:-mainnet}.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:contracts": "rm -rf externals && npm run submodule:get:governance-v2 && npm run submodule:get:aave-token-v2 && npm run submodule:get:stake && npm run submodule:install && npm run submodule:compile-contracts",
     "submodule:get:governance-v2": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2",
     "submodule:get:aave-token-v2": "git submodule add -f https://github.com/aave/aave-token-v2.git externals/aave-token-v2",
+    "submodule:get:stake": "git submodule add -f https://github.com/aave/aave-stake-v2 externals/stake",
     "submodule:install": "git submodule foreach npm install",
     "submodule:load": "git submodule foreach npm run load:npm",
     "submodule:compile-contracts": "git submodule foreach npm run compile",
@@ -17,7 +18,7 @@
     "subgraph:build": "graph build",
     "subgraph:deploy:hosted": "graph deploy $SLUG --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token $ACCESS_TOKEN",
     "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
-    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:hosted"
+    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-delegate env-cmd npm run subgraph:deploy:hosted"
   },
   "repository": {
     "type": "git",

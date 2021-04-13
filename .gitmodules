@@ -4,3 +4,6 @@
 [submodule "externals/aave-token-v2"]
 	path = externals/aave-token-v2
 	url = https://github.com/aave/aave-token-v2.git
+[submodule "externals/stake"]
+	path = externals/stake
+	url = https://github.com/aave/aave-stake-v2

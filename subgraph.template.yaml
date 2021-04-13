@@ -54,9 +54,7 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - TokenHolder
         - Delegate
-        - Governance
       abis:
         - name: AaveTokenV2
           file: ./externals/aave-token-v2/artifacts/contracts/token/AaveTokenV2.sol/AaveTokenV2.json
