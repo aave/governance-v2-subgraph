@@ -33,6 +33,10 @@ export function handleTransfer(event: Transfer): void {
       ]);
     }
 
+    fromHolder.totalVotingPowerRaw = fromHolder.aaveBalanceRaw.plus(fromHolder.stkAaveBalanceRaw).plus(fromHolder.aaveDelegatedVotingPowerRaw).plus(fromHolder.stkAaveDelegatedVotingPowerRaw)
+    fromHolder.totalVotingPower = toDecimal(fromHolder.totalVotingPowerRaw)
+    fromHolder.totalPropositionPowerRaw = fromHolder.aaveBalanceRaw.plus(fromHolder.stkAaveBalanceRaw).plus(fromHolder.aaveDelegatedPropositionPowerRaw).plus(fromHolder.stkAaveDelegatedPropositionPowerRaw)
+    fromHolder.totalPropositionPower = toDecimal(fromHolder.totalPropositionPowerRaw)
     fromHolder.save();
   }
 
@@ -40,6 +44,11 @@ export function handleTransfer(event: Transfer): void {
   toHolder.aaveBalanceRaw = toHolder.aaveBalanceRaw.plus(event.params.value);
   toHolder.aaveBalance = toDecimal(toHolder.aaveBalanceRaw);
 
+
+  toHolder.totalVotingPowerRaw = toHolder.aaveBalanceRaw.plus(toHolder.stkAaveBalanceRaw).plus(toHolder.aaveDelegatedVotingPowerRaw).plus(toHolder.stkAaveDelegatedVotingPowerRaw)
+  toHolder.totalVotingPower = toDecimal(toHolder.totalVotingPowerRaw)
+  toHolder.totalPropositionPowerRaw = toHolder.aaveBalanceRaw.plus(toHolder.stkAaveBalanceRaw).plus(toHolder.aaveDelegatedPropositionPowerRaw).plus(toHolder.stkAaveDelegatedPropositionPowerRaw)
+  toHolder.totalPropositionPower = toDecimal(toHolder.totalPropositionPowerRaw)
   toHolder.save();
 }
 
@@ -53,12 +62,25 @@ export function handleDelegateChanged(event: DelegateChanged): void {
     previousDelegate.usersVotingRepresentedAmount = previousDelegate.usersVotingRepresentedAmount - 1
     newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1
     delegator.votingDelegate = newDelegate.id
+    if(previousDelegate.id === delegator.id){
+      delegator.explicitSelfDelegateVoting = false
+    }
+    if(newDelegate.id === delegator.id){
+      delegator.explicitSelfDelegateVoting = true;
+    }
     previousDelegate.save()
   } else {
     let previousDelegate = getOrInitDelegate(delegator.propositionDelegate);
     previousDelegate.usersPropositionRepresentedAmount = previousDelegate.usersPropositionRepresentedAmount - 1
     newDelegate.usersPropositionRepresentedAmount = newDelegate.usersPropositionRepresentedAmount + 1
     delegator.propositionDelegate = newDelegate.id
+    previousDelegate.save()
+    if(previousDelegate.id === delegator.id){
+      delegator.explicitSelfDelegateProposing = false
+    }
+    if(newDelegate.id === delegator.id){
+      delegator.explicitSelfDelegateProposing = true;
+    }
     previousDelegate.save()
   }
 
@@ -75,8 +97,21 @@ export function handleDelegatedPowerChanged(
 
     delegate.aaveDelegatedVotingPowerRaw = amount;
     delegate.aaveDelegatedVotingPower = toDecimal(amount);
-    delegate.totalVotingPowerRaw = delegate.stkAaveDelegatedVotingPowerRaw.plus(delegate.aaveDelegatedVotingPowerRaw)
-    delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
+
+    let votingDelegate = getOrInitDelegate(delegate.votingDelegate)
+    if(delegate.id === votingDelegate.id){
+      if(delegate.explicitSelfDelegateVoting){
+        delegate.aaveDelegatedVotingPowerRaw = delegate.aaveDelegatedVotingPowerRaw.minus(delegate.aaveBalanceRaw)
+        delegate.aaveDelegatedVotingPower = toDecimal(delegate.aaveDelegatedVotingPowerRaw)
+      }
+      delegate.totalVotingPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedVotingPowerRaw).plus(delegate.stkAaveDelegatedVotingPowerRaw)
+      delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
+    }
+    else{
+      delegate.totalVotingPowerRaw = delegate.aaveDelegatedVotingPowerRaw.plus(delegate.stkAaveDelegatedVotingPowerRaw)
+      delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
+    }
+
     delegate.save();
 
   } else {
@@ -85,8 +120,21 @@ export function handleDelegatedPowerChanged(
 
     delegate.aaveDelegatedPropositionPowerRaw = amount;
     delegate.aaveDelegatedPropositionPower = toDecimal(amount);
-    delegate.totalPropositionPowerRaw = delegate.stkAaveDelegatedPropositionPowerRaw.plus(delegate.aaveDelegatedPropositionPowerRaw)
-    delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
+
+    let propositionDelegate = getOrInitDelegate(delegate.propositionDelegate)
+    if(delegate.id === propositionDelegate.id){
+      if(delegate.explicitSelfDelegateProposing){
+        delegate.aaveDelegatedPropositionPowerRaw = delegate.aaveDelegatedPropositionPowerRaw.minus(delegate.aaveBalanceRaw)
+        delegate.aaveDelegatedPropositionPower = toDecimal(delegate.aaveDelegatedPropositionPowerRaw)
+      }
+      delegate.totalPropositionPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedPropositionPowerRaw).plus(delegate.stkAaveDelegatedPropositionPowerRaw)
+      delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
+    }
+    else{
+      delegate.totalPropositionPowerRaw = delegate.aaveDelegatedPropositionPowerRaw.plus(delegate.stkAaveDelegatedPropositionPowerRaw)
+      delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
+    }
+
     delegate.save();
   }
 }

@@ -66,3 +66,31 @@ dataSources:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ./src/mapping/aave-token.ts
+  - kind: ethereum/contract
+    name: AaveStakeToken
+    network: {{network}}
+    source:
+      abi: StakedTokenV2
+      address: "{{AaveStakeTokenAddress}}"
+      startBlock: {{AaveStakeTokenStartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Delegate
+      abis:
+        - name: StakedTokenV2
+          file: ./externals/stake/artifacts/contracts/stake/StakedTokenV2.sol/StakedTokenV2.json
+      eventHandlers:
+        # - event: Staked(indexed address,indexed address,uint256)
+        #   handler: handleStakedstkAave
+        # - event: Redeem(indexed address,indexed address,uint256)
+        #   handler: handleRedeemstkAave
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: DelegateChanged(indexed address,indexed address,uint8)
+          handler: handleDelegateChanged
+        - event: DelegatedPowerChanged(indexed address,uint256,uint8)
+          handler: handleDelegatedPowerChanged
+      file: ./src/mapping/stake.ts
