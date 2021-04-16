@@ -37,8 +37,7 @@ type Proposal @entity {
   id: ID!
   state: ProposalState!
   ipfsHash: String!
-  creator: Bytes!
-  creatorDelegate: Delegate!
+  creator: Delegate!
   executor: Executor
   targets: [Bytes!]
   values: [BigInt!]
@@ -59,6 +58,7 @@ type Proposal @entity {
   lastUpdateTimestamp: Int!
   lastUpdateBlock: BigInt!
   title: String!
+  description: String!
   shortDescription: String!
   govContract: Bytes!
   totalPropositionSupply: BigInt!
@@ -68,11 +68,11 @@ type Proposal @entity {
   aipNumber: BigInt!
   author: String!
   discussions: String!
-  # voteBlock: BigInt!
-  # validateTimestamp: Int!
-  # validateBlock: BigInt!
-  # executeTimestamp: Int!
-  # executeBlock: BigInt!
+  #voteBlock: BigInt!
+  #validateTimestamp: Int!
+  #validateBlock: BigInt!
+  #executeTimestamp: Int!
+  #executeBlock: BigInt!
 }
 
 type Vote @entity {
@@ -81,8 +81,7 @@ type Vote @entity {
   """
   id: ID!
   proposal: Proposal!
-  voter: Bytes!
-  voterDelegate: Delegate!
+  voter: Delegate!
   support: Boolean!
   votingPower: BigInt!
   timestamp: Int!
@@ -129,10 +128,10 @@ type Delegate @entity {
   stkAaveBalance: BigDecimal!
 
   "Votes which this delegated has participated in"
-  votes: [Vote!]! @derivedFrom(field: "voterDelegate")
+  votes: [Vote!]! @derivedFrom(field: "voter")
 
   "Proposals which this delegate has created"
-  proposals: [Proposal!]! @derivedFrom(field: "creatorDelegate")
+  proposals: [Proposal!]! @derivedFrom(field: "creator")
 
   "Delegate who will vote on your behalf"
   votingDelegate: Delegate!
@@ -158,6 +157,10 @@ type Delegate @entity {
   usersVotingRepresentedAmount: Int!
   "Number of users represented for creating proposals"
   usersPropositionRepresentedAmount: Int!
+
+  "Stores whether user has explicity delegated voting/proposition power to themselves. Used in voting/proposition power calculations"
+  explicitSelfDelegateVoting: Boolean!
+  explicitSelfDelegateProposing: Boolean!
 
   # "Array of ids (addresses) which this delegate represents"
   #  usersVotingRepresentedIds: [String!]!

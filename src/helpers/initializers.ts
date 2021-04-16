@@ -1,4 +1,4 @@
-import { Bytes } from '@graphprotocol/graph-ts';
+import { Bytes} from '@graphprotocol/graph-ts';
 import {
   Proposal,
   Delegate,
@@ -10,7 +10,8 @@ import {
 import {
   BIGINT_ZERO,
   BIGDECIMAL_ZERO,
-  NA
+  NA,
+  STATUS_PENDING
 } from "../utils/constants";
 
 export function getOrInitDelegate(
@@ -33,24 +34,27 @@ export function getOrInitDelegate(
 
     delegate.stkAaveBalanceRaw = BIGINT_ZERO
     delegate.stkAaveBalance = BIGDECIMAL_ZERO
-  
+
     delegate.aaveDelegatedVotingPowerRaw = BIGINT_ZERO
     delegate.aaveDelegatedVotingPower = BIGDECIMAL_ZERO
-  
+
     delegate.stkAaveDelegatedVotingPowerRaw = BIGINT_ZERO
     delegate.stkAaveDelegatedVotingPower = BIGDECIMAL_ZERO
-  
+
     delegate.aaveDelegatedPropositionPowerRaw = BIGINT_ZERO
     delegate.aaveDelegatedPropositionPower = BIGDECIMAL_ZERO
-  
+
     delegate.stkAaveDelegatedPropositionPowerRaw = BIGINT_ZERO
     delegate.stkAaveDelegatedPropositionPower = BIGDECIMAL_ZERO
-  
-    delegate.usersVotingRepresentedAmount = 0
-    delegate.usersPropositionRepresentedAmount = 0
+
+    delegate.usersVotingRepresentedAmount = 1
+    delegate.usersPropositionRepresentedAmount = 1
 
     delegate.votingDelegate = id
     delegate.propositionDelegate = id
+
+    delegate.explicitSelfDelegateVoting = false
+    delegate.explicitSelfDelegateProposing = false
 
     delegate.save();
   }
@@ -61,11 +65,11 @@ export function getOrInitDelegate(
 export function getOrInitProposal(proposalId: string): Proposal {
   let proposal = Proposal.load(proposalId);
 
-  if (!proposal) {
+  if (proposal == null) {
     proposal = new Proposal(proposalId);
-    proposal.title = NA;
-    proposal.shortDescription = NA;
-    proposal.creator = Bytes.fromI32(0) as Bytes;
+    proposal.state = STATUS_PENDING;
+    proposal.ipfsHash = NA;
+    proposal.creator = zeroAddress().toString();
     proposal.executor = NA;
     proposal.targets = [Bytes.fromI32(0) as Bytes];
     proposal.values = [zeroBI()];
@@ -75,21 +79,24 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.startBlock = zeroBI();
     proposal.endBlock = zeroBI();
     proposal.governanceStrategy = Bytes.fromI32(0) as Bytes;
-    proposal.currentNoVote = zeroBI();
     proposal.currentYesVote = zeroBI();
+    proposal.currentNoVote = zeroBI();
     proposal.winner = NA;
     proposal.createdTimestamp = zeroBI().toI32();
-    proposal.lastUpdateBlock = zeroBI();
     proposal.lastUpdateTimestamp = zeroBI().toI32();
-    proposal.ipfsHash = NA;
+    proposal.lastUpdateBlock = zeroBI();
+    proposal.title = NA;
+    proposal.description = NA;
+    proposal.shortDescription = NA;
     proposal.govContract = zeroAddress();
     proposal.totalPropositionSupply = zeroBI();
     proposal.totalVotingSupply = zeroBI();
     proposal.createdBlockNumber = zeroBI();
     proposal.totalCurrentVoters = 0;
+    proposal.aipNumber = zeroBI();
     proposal.author = NA;
     proposal.discussions = NA;
-    proposal.aipNumber = zeroBI();
+    proposal.save()
   }
 
   return proposal as Proposal;
