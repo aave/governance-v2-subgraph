@@ -72,7 +72,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   } else {
     proposal.discussions = NA;
   }
-  if (aipNumber.kind == JSONValueKind.NUMBER) {
+  if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
       proposal.aipNumber = aipNumber.toBigInt();
   }
 
