@@ -1,11 +1,4 @@
-import {
-  ipfs,
-  json,
-  Bytes,
-  log,
-  JSONValue,
-  JSONValueKind,
-} from '@graphprotocol/graph-ts/index';
+import { ipfs, json, Bytes, log, JSONValue, JSONValueKind } from '@graphprotocol/graph-ts/index';
 import {
   BIGINT_ONE,
   STATUS_ACTIVE,
@@ -13,7 +6,7 @@ import {
   STATUS_EXECUTED,
   STATUS_PENDING,
   STATUS_QUEUED,
-} from "../utils/constants";
+} from '../utils/constants';
 import { Proposal, Vote, Executor } from '../../generated/schema';
 import { IExecutor } from '../../generated/AaveGovernanceV2/IExecutor';
 import { GovernanceStrategy } from '../../generated/AaveGovernanceV2/GovernanceStrategy';
@@ -26,9 +19,7 @@ import {
   ExecutorAuthorized,
   ExecutorUnauthorized,
 } from '../../generated/AaveGovernanceV2/AaveGovernanceV2';
-import {
-  NA,
-} from '../utils/constants';
+import { NA } from '../utils/constants';
 import { getOrInitProposal, getOrInitDelegate } from '../helpers/initializers';
 
 enum VoteType {
@@ -46,14 +37,17 @@ function getProposal(proposalId: string, fn: string): Proposal | null {
 }
 
 export function handleProposalCreated(event: ProposalCreated): void {
-  log.warning("Proposal created with ID: {}" ,[event.params.id.toString()])
   let proposal = getOrInitProposal(event.params.id.toString());
-  let creator = getOrInitDelegate(event.params.creator.toString())
+  log.warning('Proposal created by {} with ID {}', [
+    event.params.creator.toHexString(),
+    event.params.id.toString(),
+  ]);
+  let creator = getOrInitDelegate(event.params.creator.toHexString());
+  creator.numProposals = creator.numProposals + 1;
+  creator.save();
 
   // Get ipfs proposal information
-  let hash = Bytes.fromHexString(
-    "1220" + event.params.ipfsHash.toHexString().slice(2)
-  ).toBase58();
+  let hash = Bytes.fromHexString('1220' + event.params.ipfsHash.toHexString().slice(2)).toBase58();
   let data = ipfs.cat(hash);
   let proposalData = json.try_fromBytes(data as Bytes);
   let title: JSONValue | null = null;
@@ -61,27 +55,26 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let description: JSONValue | null = null;
   if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
     let data = proposalData.value.toObject();
-    title = data.get("title");
-    description = data.get("description");
-    shortDescription = data.get("shortDescription");
+    title = data.get('title');
+    description = data.get('description');
+    shortDescription = data.get('shortDescription');
   }
   if (shortDescription) {
     proposal.shortDescription = shortDescription.toString();
   } else {
-    proposal.shortDescription = "NA";
+    proposal.shortDescription = 'NA';
   }
   if (description) {
     proposal.description = description.toString();
   } else {
-    proposal.description = "NA";
+    proposal.description = 'NA';
   }
   if (title) {
     proposal.title = title.toString();
   } else {
-    proposal.title = "NA";
+    proposal.title = 'NA';
   }
-  proposal.state =
-    event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
+  proposal.state = event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
   proposal.ipfsHash = hash;
   proposal.creator = creator.id;
   proposal.targets = event.params.targets as Bytes[];
@@ -92,7 +85,9 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.startBlock = event.params.startBlock;
   proposal.endBlock = event.params.endBlock;
   let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
-  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(event.params.startBlock);
+  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(
+    event.params.startBlock
+  );
   proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
   proposal.govContract = event.address;
   proposal.governanceStrategy = event.params.strategy;
@@ -109,7 +104,6 @@ export function handleProposalQueued(event: ProposalQueued): void {
   proposal.state = STATUS_QUEUED;
   proposal.executionTime = event.params.executionTime;
   proposal.save();
-
 }
 
 export function handleProposalExecuted(event: ProposalExecuted): void {
@@ -146,17 +140,16 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     proposal.totalCurrentVoters = proposal.totalCurrentVoters + 1;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
-    proposal.state = "Active";
+    proposal.state = 'Active';
     proposal.save();
   }
-
 
   let voterDel = getOrInitDelegate(event.params.voter.toHexString(), false);
 
   // checking if the voter was a delegate already accounted for, if not we should log an error
   // since it shouldn't be possible for a delegate to vote without first being "created"
   if (voterDel == null) {
-    log.error("Delegate {} not found on VoteCast. tx_hash: {}", [
+    log.error('Delegate {} not found on VoteCast. tx_hash: {}', [
       event.params.voter.toHexString(),
       event.transaction.hash.toHexString(),
     ]);
@@ -164,7 +157,8 @@ export function handleVoteEmitted(event: VoteEmitted): void {
 
   // Creating it anyway since we will want to account for this event data, even though it should've never happened
   voterDel = getOrInitDelegate(event.params.voter.toHexString());
-
+  voterDel.numVotes = voterDel.numVotes + 1;
+  voterDel.save();
   let id = event.params.voter.toHexString() + ':' + event.params.id.toString();
   let vote = Vote.load(id) || new Vote(id);
   vote.proposal = event.params.id.toString();
@@ -181,7 +175,7 @@ export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
     executor.authorized = true;
   } else {
     executor = new Executor(event.params.executor.toHexString());
-    let executorContract =  IExecutor.bind(event.params.executor);
+    let executorContract = IExecutor.bind(event.params.executor);
     executor.authorized = true;
     executor.propositionThreshold = executorContract.PROPOSITION_THRESHOLD();
     executor.votingDuration = executorContract.VOTING_DURATION();

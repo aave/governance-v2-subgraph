@@ -53,8 +53,8 @@ export function getOrInitDelegate(
     delegate.votingDelegate = id
     delegate.propositionDelegate = id
 
-    delegate.explicitSelfDelegateVoting = false
-    delegate.explicitSelfDelegateProposing = false
+    delegate.numVotes = 0;
+    delegate.numProposals = 0;
 
     delegate.save();
   }

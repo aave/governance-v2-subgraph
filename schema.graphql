@@ -158,9 +158,9 @@ type Delegate @entity {
   "Number of users represented for creating proposals"
   usersPropositionRepresentedAmount: Int!
 
-  "Stores whether user has explicity delegated voting/proposition power to themselves. Used in voting/proposition power calculations"
-  explicitSelfDelegateVoting: Boolean!
-  explicitSelfDelegateProposing: Boolean!
+  "Number of votes a user has cast"
+  numVotes: Int!
+  numProposals: Int!
 
   # "Array of ids (addresses) which this delegate represents"
   #  usersVotingRepresentedIds: [String!]!

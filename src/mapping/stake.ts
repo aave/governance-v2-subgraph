@@ -54,24 +54,12 @@ export function handleDelegateChanged(event: DelegateChanged): void {
     previousDelegate.usersVotingRepresentedAmount = previousDelegate.usersVotingRepresentedAmount - 1
     newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1
     delegator.votingDelegate = newDelegate.id
-    if(previousDelegate.id === delegator.id){
-      delegator.explicitSelfDelegateVoting = false
-    }
-    if(newDelegate.id === delegator.id){
-      delegator.explicitSelfDelegateVoting = true;
-    }
     previousDelegate.save()
   } else {
     let previousDelegate = getOrInitDelegate(delegator.propositionDelegate);
     previousDelegate.usersPropositionRepresentedAmount = previousDelegate.usersPropositionRepresentedAmount - 1
     newDelegate.usersPropositionRepresentedAmount = newDelegate.usersPropositionRepresentedAmount + 1
     delegator.propositionDelegate = newDelegate.id
-    if(previousDelegate.id === delegator.id){
-      delegator.explicitSelfDelegateProposing = false
-    }
-    if(newDelegate.id === delegator.id){
-      delegator.explicitSelfDelegateProposing = true;
-    }
     previousDelegate.save()
   }
 
@@ -91,10 +79,6 @@ export function handleDelegatedPowerChanged(
 
     let votingDelegate = getOrInitDelegate(delegate.votingDelegate)
     if(delegate.id === votingDelegate.id){
-      if(delegate.explicitSelfDelegateVoting){
-        delegate.stkAaveDelegatedVotingPowerRaw = delegate.stkAaveDelegatedVotingPowerRaw.minus(delegate.stkAaveBalanceRaw)
-        delegate.stkAaveDelegatedVotingPower = toDecimal(delegate.stkAaveDelegatedVotingPowerRaw)
-      }
       delegate.totalVotingPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedVotingPowerRaw).plus(delegate.stkAaveDelegatedVotingPowerRaw)
       delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
     }
@@ -114,10 +98,6 @@ export function handleDelegatedPowerChanged(
 
     let propositionDelegate = getOrInitDelegate(delegate.propositionDelegate)
     if(delegate.id === propositionDelegate.id){
-      if(delegate.explicitSelfDelegateProposing){
-        delegate.stkAaveDelegatedPropositionPowerRaw = delegate.stkAaveDelegatedPropositionPowerRaw.minus(delegate.stkAaveBalanceRaw)
-        delegate.stkAaveDelegatedPropositionPower = toDecimal(delegate.stkAaveDelegatedPropositionPowerRaw)
-      }
       delegate.totalPropositionPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedPropositionPowerRaw).plus(delegate.stkAaveDelegatedPropositionPowerRaw)
       delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
     }
