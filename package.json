@@ -6,7 +6,7 @@
     "dev-environment": "npm i && tail -f /dev/null",
     "build": "graph build",
     "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
-    "prepare:subgraph": "mustache ./config/${NETWORK:-mainnet}.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:subgraph": "mustache ./config/${NETWORK:-kovan}.json subgraph.template.yaml > subgraph.yaml",
     "prepare:contracts": "rm -rf externals && npm run submodule:get:governance-v2 && npm run submodule:get:aave-token-v2 && npm run submodule:get:stake && npm run submodule:install && npm run submodule:compile-contracts",
     "submodule:get:governance-v2": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2",
     "submodule:get:aave-token-v2": "git submodule add -f https://github.com/aave/aave-token-v2.git externals/aave-token-v2",
@@ -18,7 +18,9 @@
     "subgraph:build": "graph build",
     "subgraph:deploy:hosted": "graph deploy $SLUG --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token $ACCESS_TOKEN",
     "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
-    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-delegate env-cmd npm run subgraph:deploy:hosted"
+    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-delegate env-cmd npm run subgraph:deploy:hosted",
+    "test-kovan": "ts-node src/test/subgraph-test.ts kovan",
+    "test-mainnet": "ts-node src/test/subgraph-test.ts mainnet"
   },
   "repository": {
     "type": "git",
@@ -45,19 +47,23 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "typescript": "3.5.3"
+    "@apollo/client": "^3.3.16",
+    "cross-fetch": "^3.1.4",
+    "graphql": "^14.7.0",
+    "typescript": "3.5.3",
+    "web3": "^1.3.5"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
     "@graphprotocol/graph-ts": "^0.18.1",
-    "env-cmd": "^10.1.0",
-    "mustache": "^3.1.0",
-    "typescript": "3.5.3",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
+    "env-cmd": "^10.1.0",
     "eslint": "^6.2.2",
     "eslint-config-prettier": "^6.1.0",
     "lint-staged": "^9.2.5",
-    "prettier": "^1.18.2"
+    "mustache": "^3.1.0",
+    "prettier": "^1.18.2",
+    "typescript": "3.5.3"
   }
 }
