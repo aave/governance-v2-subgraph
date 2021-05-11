@@ -1,60 +1,51 @@
-import { Bytes} from '@graphprotocol/graph-ts';
-import {
-  Proposal,
-  Delegate,
-} from '../../generated/schema';
-import {
-  zeroAddress,
-  zeroBI,
-} from '../utils/converters';
-import {
-  BIGINT_ZERO,
-  BIGDECIMAL_ZERO,
-  NA,
-  STATUS_PENDING
-} from "../utils/constants";
+import { Bytes } from '@graphprotocol/graph-ts';
+import { Proposal, Delegate } from '../../generated/schema';
+import { zeroAddress, zeroBI } from '../utils/converters';
+import { BIGINT_ZERO, BIGDECIMAL_ZERO, NA, STATUS_PENDING } from '../utils/constants';
 
-export function getOrInitDelegate(
-  id: string,
-  createIfNotFound: boolean = true,
-): Delegate {
+export function getOrInitDelegate(id: string, createIfNotFound: boolean = true): Delegate {
   let delegate = Delegate.load(id);
 
   if (delegate == null && createIfNotFound) {
     delegate = new Delegate(id);
 
-    delegate.totalVotingPowerRaw = BIGINT_ZERO
-    delegate.totalVotingPower = BIGDECIMAL_ZERO
+    delegate.aaveBalanceRaw = BIGINT_ZERO;
+    delegate.aaveBalance = BIGDECIMAL_ZERO;
 
-    delegate.totalPropositionPowerRaw = BIGINT_ZERO
-    delegate.totalPropositionPower = BIGDECIMAL_ZERO
+    delegate.stkAaveBalanceRaw = BIGINT_ZERO;
+    delegate.stkAaveBalance = BIGDECIMAL_ZERO;
 
-    delegate.aaveBalanceRaw = BIGINT_ZERO
-    delegate.aaveBalance = BIGDECIMAL_ZERO
+    delegate.totalVotingPowerRaw = BIGINT_ZERO;
+    delegate.totalVotingPower = BIGDECIMAL_ZERO;
 
-    delegate.stkAaveBalanceRaw = BIGINT_ZERO
-    delegate.stkAaveBalance = BIGDECIMAL_ZERO
+    delegate.totalPropositionPowerRaw = BIGINT_ZERO;
+    delegate.totalPropositionPower = BIGDECIMAL_ZERO;
 
-    delegate.aaveDelegatedVotingPowerRaw = BIGINT_ZERO
-    delegate.aaveDelegatedVotingPower = BIGDECIMAL_ZERO
+    delegate.aaveDelegatedVotingPowerRaw = BIGINT_ZERO;
+    delegate.aaveDelegatedVotingPower = BIGDECIMAL_ZERO;
 
-    delegate.stkAaveDelegatedVotingPowerRaw = BIGINT_ZERO
-    delegate.stkAaveDelegatedVotingPower = BIGDECIMAL_ZERO
+    delegate.stkAaveDelegatedVotingPowerRaw = BIGINT_ZERO;
+    delegate.stkAaveDelegatedVotingPower = BIGDECIMAL_ZERO;
 
-    delegate.aaveDelegatedPropositionPowerRaw = BIGINT_ZERO
-    delegate.aaveDelegatedPropositionPower = BIGDECIMAL_ZERO
+    delegate.aaveDelegatedPropositionPowerRaw = BIGINT_ZERO;
+    delegate.aaveDelegatedPropositionPower = BIGDECIMAL_ZERO;
 
-    delegate.stkAaveDelegatedPropositionPowerRaw = BIGINT_ZERO
-    delegate.stkAaveDelegatedPropositionPower = BIGDECIMAL_ZERO
+    delegate.stkAaveDelegatedPropositionPowerRaw = BIGINT_ZERO;
+    delegate.stkAaveDelegatedPropositionPower = BIGDECIMAL_ZERO;
 
-    delegate.usersVotingRepresentedAmount = 1
-    delegate.usersPropositionRepresentedAmount = 1
+    delegate.usersVotingRepresentedAmount = 1;
+    delegate.usersPropositionRepresentedAmount = 1;
 
-    delegate.votingDelegate = id
-    delegate.propositionDelegate = id
+    delegate.aaveVotingDelegate = id;
+    delegate.aavePropositionDelegate = id;
 
-    delegate.numVotes = 0;
-    delegate.numProposals = 0;
+    delegate.stkAaveVotingDelegate = id;
+    delegate.stkAavePropositionDelegate = id;
+
+    delegate.numVotes = zeroBI().toI32();
+    delegate.numProposals = zeroBI().toI32();
+
+    delegate.lastUpdateTimestamp = zeroBI().toI32();
 
     delegate.save();
   }
@@ -96,7 +87,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.aipNumber = zeroBI();
     proposal.author = NA;
     proposal.discussions = NA;
-    proposal.save()
+    proposal.save();
   }
 
   return proposal as Proposal;

@@ -1,34 +1,25 @@
-import {
-  getOrInitDelegate
-} from "../helpers/initializers";
-import {
-  BIGINT_ONE,
-  BIGINT_ZERO,
-  VOTING_POWER,
-  ZERO_ADDRESS,
-} from "../utils/constants";
-import { toDecimal } from "../utils/converters";
+import { log } from '@graphprotocol/graph-ts';
+import { getOrInitDelegate } from '../helpers/initializers';
+import { VOTING_POWER, BIGINT_ZERO, ZERO_ADDRESS } from '../utils/constants';
+import { toDecimal } from '../utils/converters';
 import {
   DelegateChanged,
   DelegatedPowerChanged,
   Transfer,
-} from "../../generated/AaveStakeToken/StakedTokenV2";
-import { Delegate } from "../../generated/schema";
-import { log, BigInt } from "@graphprotocol/graph-ts";
+} from '../../generated/AaveStakeToken/StakedTokenV3';
 
 export function handleTransfer(event: Transfer): void {
-  let fromHolder = getOrInitDelegate(event.params.from.toHexString());
-  let toHolder = getOrInitDelegate(event.params.to.toHexString());
+  let fromAddress = event.params.from.toHexString();
+  let toAddress = event.params.to.toHexString();
 
   // fromHolder
-  if (event.params.from.toHexString() != ZERO_ADDRESS) {
-    fromHolder.stkAaveBalanceRaw = fromHolder.stkAaveBalanceRaw.minus(
-      event.params.value
-    );
+  if (fromAddress != ZERO_ADDRESS) {
+    let fromHolder = getOrInitDelegate(fromAddress);
+    fromHolder.stkAaveBalanceRaw = fromHolder.stkAaveBalanceRaw.minus(event.params.value);
     fromHolder.stkAaveBalance = toDecimal(fromHolder.stkAaveBalanceRaw);
 
     if (fromHolder.stkAaveBalanceRaw < BIGINT_ZERO) {
-      log.error("Negative balance on holder {} with balance {}", [
+      log.error('Negative balance on holder {} with balance {}', [
         fromHolder.id,
         fromHolder.stkAaveBalanceRaw.toString(),
       ]);
@@ -38,74 +29,106 @@ export function handleTransfer(event: Transfer): void {
   }
 
   // toHolder
-  toHolder.stkAaveBalanceRaw = toHolder.stkAaveBalanceRaw.plus(event.params.value);
-  toHolder.stkAaveBalance = toDecimal(toHolder.stkAaveBalanceRaw);
+  if (toAddress != ZERO_ADDRESS) {
+    let toHolder = getOrInitDelegate(toAddress);
+    toHolder.stkAaveBalanceRaw = toHolder.stkAaveBalanceRaw.plus(event.params.value);
+    toHolder.stkAaveBalance = toDecimal(toHolder.stkAaveBalanceRaw);
 
-  toHolder.save();
+    // Ensure that stkAaveDelegatedVotingPower is strictly greater than stkAaveBalance if person is self delegating
+    if (
+      toHolder.stkAaveVotingDelegate === toHolder.id &&
+      toHolder.stkAaveDelegatedVotingPower < toHolder.stkAaveBalance
+    ) {
+      log.warning('Address {} getting set to stkAave voting power {}', [
+        toHolder.id,
+        toHolder.stkAaveBalance.toString(),
+      ]);
+      toHolder.stkAaveDelegatedVotingPowerRaw = toHolder.stkAaveBalanceRaw;
+      toHolder.stkAaveDelegatedVotingPower = toDecimal(toHolder.stkAaveDelegatedVotingPowerRaw);
+      toHolder.totalVotingPowerRaw = toHolder.stkAaveDelegatedVotingPowerRaw.plus(
+        toHolder.aaveDelegatedVotingPowerRaw
+      );
+      toHolder.totalVotingPower = toDecimal(toHolder.totalVotingPowerRaw);
+    }
+
+    // Ensure that stkAaveDelegatedPropositionPower is strictly greater than stkAaveBalance if person is self delegating
+    if (
+      toHolder.stkAavePropositionDelegate === toHolder.id &&
+      toHolder.stkAaveDelegatedPropositionPower < toHolder.stkAaveBalance
+    ) {
+      log.warning('Address {} getting set to stkAave proposition power {}', [
+        toHolder.id,
+        toHolder.stkAaveBalance.toString(),
+      ]);
+      toHolder.stkAaveDelegatedPropositionPowerRaw = toHolder.stkAaveBalanceRaw;
+      toHolder.stkAaveDelegatedPropositionPower = toDecimal(
+        toHolder.stkAaveDelegatedPropositionPowerRaw
+      );
+      toHolder.totalPropositionPowerRaw = toHolder.stkAaveDelegatedPropositionPowerRaw.plus(
+        toHolder.aaveDelegatedPropositionPowerRaw
+      );
+      toHolder.totalPropositionPower = toDecimal(toHolder.totalPropositionPowerRaw);
+    }
+
+    toHolder.save();
+  }
 }
 
 export function handleDelegateChanged(event: DelegateChanged): void {
-  let delegator = getOrInitDelegate(
-    event.params.delegator.toHexString()
-  );
+  let delegator = getOrInitDelegate(event.params.delegator.toHexString());
   let newDelegate = getOrInitDelegate(event.params.delegatee.toHexString());
-  if(event.params.delegationType == VOTING_POWER){
-    let previousDelegate = getOrInitDelegate(delegator.votingDelegate);
-    previousDelegate.usersVotingRepresentedAmount = previousDelegate.usersVotingRepresentedAmount - 1
-    newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1
-    delegator.votingDelegate = newDelegate.id
-    previousDelegate.save()
+  if (event.params.delegationType == VOTING_POWER) {
+    let previousDelegate = getOrInitDelegate(delegator.stkAaveVotingDelegate);
+    previousDelegate.usersVotingRepresentedAmount =
+      previousDelegate.usersVotingRepresentedAmount - 1;
+    newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1;
+    delegator.stkAaveVotingDelegate = newDelegate.id;
+    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+    previousDelegate.save();
   } else {
-    let previousDelegate = getOrInitDelegate(delegator.propositionDelegate);
-    previousDelegate.usersPropositionRepresentedAmount = previousDelegate.usersPropositionRepresentedAmount - 1
-    newDelegate.usersPropositionRepresentedAmount = newDelegate.usersPropositionRepresentedAmount + 1
-    delegator.propositionDelegate = newDelegate.id
-    previousDelegate.save()
+    let previousDelegate = getOrInitDelegate(delegator.stkAavePropositionDelegate);
+    previousDelegate.usersPropositionRepresentedAmount =
+      previousDelegate.usersPropositionRepresentedAmount - 1;
+    newDelegate.usersPropositionRepresentedAmount =
+      newDelegate.usersPropositionRepresentedAmount + 1;
+    delegator.stkAavePropositionDelegate = newDelegate.id;
+    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+    previousDelegate.save();
   }
-
+  delegator.lastUpdateTimestamp = event.block.timestamp.toI32();
+  newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
   delegator.save();
   newDelegate.save();
 }
 
-export function handleDelegatedPowerChanged(
-  event: DelegatedPowerChanged
-): void {
+export function handleDelegatedPowerChanged(event: DelegatedPowerChanged): void {
   if (event.params.delegationType == VOTING_POWER) {
     let delegate = getOrInitDelegate(event.params.user.toHexString());
     let amount = event.params.amount;
 
     delegate.stkAaveDelegatedVotingPowerRaw = amount;
-    delegate.stkAaveDelegatedVotingPower = toDecimal(amount);
+    delegate.stkAaveDelegatedVotingPower = toDecimal(delegate.stkAaveDelegatedVotingPowerRaw);
 
-    let votingDelegate = getOrInitDelegate(delegate.votingDelegate)
-    if(delegate.id === votingDelegate.id){
-      delegate.totalVotingPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedVotingPowerRaw).plus(delegate.stkAaveDelegatedVotingPowerRaw)
-      delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
-    }
-    else{
-      delegate.totalVotingPowerRaw = delegate.aaveDelegatedVotingPowerRaw.plus(delegate.stkAaveDelegatedVotingPowerRaw)
-      delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw)
-    }
-
+    delegate.totalVotingPowerRaw = delegate.aaveDelegatedVotingPowerRaw.plus(
+      delegate.stkAaveDelegatedVotingPowerRaw
+    );
+    delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw);
+    delegate.lastUpdateTimestamp = event.block.timestamp.toI32();
     delegate.save();
-
   } else {
     let delegate = getOrInitDelegate(event.params.user.toHexString());
     let amount = event.params.amount;
 
     delegate.stkAaveDelegatedPropositionPowerRaw = amount;
-    delegate.stkAaveDelegatedPropositionPower = toDecimal(amount);
+    delegate.stkAaveDelegatedPropositionPower = toDecimal(
+      delegate.stkAaveDelegatedPropositionPowerRaw
+    );
 
-    let propositionDelegate = getOrInitDelegate(delegate.propositionDelegate)
-    if(delegate.id === propositionDelegate.id){
-      delegate.totalPropositionPowerRaw = delegate.aaveBalanceRaw.plus(delegate.stkAaveBalanceRaw).plus(delegate.aaveDelegatedPropositionPowerRaw).plus(delegate.stkAaveDelegatedPropositionPowerRaw)
-      delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
-    }
-    else{
-      delegate.totalPropositionPowerRaw = delegate.aaveDelegatedPropositionPowerRaw.plus(delegate.stkAaveDelegatedPropositionPowerRaw)
-      delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw)
-    }
-
+    delegate.totalPropositionPowerRaw = delegate.aaveDelegatedPropositionPowerRaw.plus(
+      delegate.stkAaveDelegatedPropositionPowerRaw
+    );
+    delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw);
+    delegate.lastUpdateTimestamp = event.block.timestamp.toI32();
     delegate.save();
   }
 }

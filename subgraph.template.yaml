@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 description: Aave governance V2 subgraph
-repository: https://github.com/graphprotocol/governance-v2-subgraph
+repository: https://github.com/aave/governance-v2-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
@@ -67,10 +67,10 @@ dataSources:
           handler: handleTransfer
       file: ./src/mapping/aave-token.ts
   - kind: ethereum/contract
-    name: AaveStakeToken
+    name: StakedTokenV3
     network: {{network}}
     source:
-      abi: StakedTokenV2
+      abi: StakedTokenV3
       address: "{{AaveStakeTokenAddress}}"
       startBlock: {{AaveStakeTokenStartBlock}}
     mapping:
@@ -80,13 +80,9 @@ dataSources:
       entities:
         - Delegate
       abis:
-        - name: StakedTokenV2
-          file: ./externals/stake/artifacts/contracts/stake/StakedTokenV2.sol/StakedTokenV2.json
+        - name: StakedTokenV3
+          file: ./externals/stake/artifacts/contracts/stake/StakedTokenV3.sol/StakedTokenV3.json
       eventHandlers:
-        # - event: Staked(indexed address,indexed address,uint256)
-        #   handler: handleStakedstkAave
-        # - event: Redeem(indexed address,indexed address,uint256)
-        #   handler: handleRedeemstkAave
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
         - event: DelegateChanged(indexed address,indexed address,uint8)

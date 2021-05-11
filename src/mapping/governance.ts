@@ -1,8 +1,7 @@
 import { ipfs, json, Bytes, log, JSONValue, JSONValueKind } from '@graphprotocol/graph-ts/index';
 import {
-  BIGINT_ONE,
   STATUS_ACTIVE,
-  STATUS_CANCELLED,
+  STATUS_CANCELED,
   STATUS_EXECUTED,
   STATUS_PENDING,
   STATUS_QUEUED,
@@ -19,8 +18,8 @@ import {
   ExecutorAuthorized,
   ExecutorUnauthorized,
 } from '../../generated/AaveGovernanceV2/AaveGovernanceV2';
-import { NA } from '../utils/constants';
 import { getOrInitProposal, getOrInitDelegate } from '../helpers/initializers';
+import { BIGINT_ZERO } from '../utils/constants';
 
 enum VoteType {
   Abstain = 0,
@@ -38,10 +37,6 @@ function getProposal(proposalId: string, fn: string): Proposal | null {
 
 export function handleProposalCreated(event: ProposalCreated): void {
   let proposal = getOrInitProposal(event.params.id.toString());
-  log.warning('Proposal created by {} with ID {}', [
-    event.params.creator.toHexString(),
-    event.params.id.toString(),
-  ]);
   let creator = getOrInitDelegate(event.params.creator.toHexString());
   creator.numProposals = creator.numProposals + 1;
   creator.save();
@@ -109,7 +104,7 @@ export function handleProposalQueued(event: ProposalQueued): void {
 export function handleProposalExecuted(event: ProposalExecuted): void {
   let proposal = getProposal(event.params.id.toString(), 'ProposalExecuted');
   if (proposal) {
-    proposal.state = 'Executed';
+    proposal.state = STATUS_EXECUTED;
     proposal.initiatorExecution = event.params.initiatorExecution;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
@@ -120,7 +115,7 @@ export function handleProposalExecuted(event: ProposalExecuted): void {
 export function handleProposalCanceled(event: ProposalCanceled): void {
   let proposal = getProposal(event.params.id.toString(), 'ProposalCanceled');
   if (proposal) {
-    proposal.state = 'Canceled';
+    proposal.state = STATUS_CANCELED;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
     proposal.save();
@@ -140,7 +135,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     proposal.totalCurrentVoters = proposal.totalCurrentVoters + 1;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
-    proposal.state = 'Active';
+    proposal.state = STATUS_ACTIVE;
     proposal.save();
   }
 
@@ -198,5 +193,3 @@ export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
     executor.save();
   }
 }
-// export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
-// }
