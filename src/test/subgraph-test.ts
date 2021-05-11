@@ -204,7 +204,7 @@ async function testSubgraph(network: string) {
     console.log('Testing Mainnet\n');
     const delegates = await fetchDelegates('mainnet');
     console.log('Delegates Found: ' + delegates.length + '\n');
-    //parseDelegates(delegates, 'mainnet');
+    parseDelegates(delegates, 'mainnet');
   } else {
     console.log('kovan and mainnet are the only supported networks');
     return;
