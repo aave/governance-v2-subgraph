@@ -35,40 +35,6 @@ export function handleTransfer(event: Transfer): void {
     toHolder.aaveBalanceRaw = toHolder.aaveBalanceRaw.plus(event.params.value);
     toHolder.aaveBalance = toDecimal(toHolder.aaveBalanceRaw);
 
-    // Ensure that aaveDelegatedVotingPower is strictly greater than aaveBalance if person is self delegating
-    if (
-      toHolder.aaveVotingDelegate === toHolder.id &&
-      toHolder.aaveDelegatedVotingPower < toHolder.aaveBalance
-    ) {
-      log.warning('Address {} getting set to aave voting power {}', [
-        toHolder.id,
-        toHolder.aaveBalance.toString(),
-      ]);
-      toHolder.aaveDelegatedVotingPowerRaw = toHolder.aaveBalanceRaw;
-      toHolder.aaveDelegatedVotingPower = toDecimal(toHolder.aaveDelegatedVotingPowerRaw);
-      toHolder.totalVotingPowerRaw = toHolder.aaveDelegatedVotingPowerRaw.plus(
-        toHolder.stkAaveDelegatedVotingPowerRaw
-      );
-      toHolder.totalVotingPower = toDecimal(toHolder.totalVotingPowerRaw);
-    }
-
-    // Ensure that aaveDelegatedPropositionPower is strictly greater than aaveBalance if person is self delegating
-    if (
-      toHolder.aavePropositionDelegate === toHolder.id &&
-      toHolder.aaveDelegatedPropositionPower < toHolder.aaveBalance
-    ) {
-      log.warning('Address {} getting set to aave voting power {}', [
-        toHolder.id,
-        toHolder.aaveBalance.toString(),
-      ]);
-      toHolder.aaveDelegatedPropositionPowerRaw = toHolder.aaveBalanceRaw;
-      toHolder.aaveDelegatedPropositionPower = toDecimal(toHolder.aaveDelegatedPropositionPowerRaw);
-      toHolder.totalPropositionPowerRaw = toHolder.aaveDelegatedPropositionPowerRaw.plus(
-        toHolder.stkAaveDelegatedPropositionPowerRaw
-      );
-      toHolder.totalPropositionPower = toDecimal(toHolder.totalPropositionPowerRaw);
-    }
-
     toHolder.lastUpdateTimestamp = event.block.timestamp.toI32();
     toHolder.save();
   }

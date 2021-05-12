@@ -34,42 +34,6 @@ export function handleTransfer(event: Transfer): void {
     toHolder.stkAaveBalanceRaw = toHolder.stkAaveBalanceRaw.plus(event.params.value);
     toHolder.stkAaveBalance = toDecimal(toHolder.stkAaveBalanceRaw);
 
-    // Ensure that stkAaveDelegatedVotingPower is strictly greater than stkAaveBalance if person is self delegating
-    if (
-      toHolder.stkAaveVotingDelegate === toHolder.id &&
-      toHolder.stkAaveDelegatedVotingPower < toHolder.stkAaveBalance
-    ) {
-      log.warning('Address {} getting set to stkAave voting power {}', [
-        toHolder.id,
-        toHolder.stkAaveBalance.toString(),
-      ]);
-      toHolder.stkAaveDelegatedVotingPowerRaw = toHolder.stkAaveBalanceRaw;
-      toHolder.stkAaveDelegatedVotingPower = toDecimal(toHolder.stkAaveDelegatedVotingPowerRaw);
-      toHolder.totalVotingPowerRaw = toHolder.stkAaveDelegatedVotingPowerRaw.plus(
-        toHolder.aaveDelegatedVotingPowerRaw
-      );
-      toHolder.totalVotingPower = toDecimal(toHolder.totalVotingPowerRaw);
-    }
-
-    // Ensure that stkAaveDelegatedPropositionPower is strictly greater than stkAaveBalance if person is self delegating
-    if (
-      toHolder.stkAavePropositionDelegate === toHolder.id &&
-      toHolder.stkAaveDelegatedPropositionPower < toHolder.stkAaveBalance
-    ) {
-      log.warning('Address {} getting set to stkAave proposition power {}', [
-        toHolder.id,
-        toHolder.stkAaveBalance.toString(),
-      ]);
-      toHolder.stkAaveDelegatedPropositionPowerRaw = toHolder.stkAaveBalanceRaw;
-      toHolder.stkAaveDelegatedPropositionPower = toDecimal(
-        toHolder.stkAaveDelegatedPropositionPowerRaw
-      );
-      toHolder.totalPropositionPowerRaw = toHolder.stkAaveDelegatedPropositionPowerRaw.plus(
-        toHolder.aaveDelegatedPropositionPowerRaw
-      );
-      toHolder.totalPropositionPower = toDecimal(toHolder.totalPropositionPowerRaw);
-    }
-
     toHolder.save();
   }
 }

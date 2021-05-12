@@ -8,6 +8,8 @@ import Web3 from 'web3';
 import fetch from 'cross-fetch';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client/core';
 
+require('dotenv').config();
+
 const kovanClient = new ApolloClient({
   link: new HttpLink({
     uri: 'https://api.thegraph.com/subgraphs/name/aschmidt20/governance-v2-kovan',
@@ -23,9 +25,9 @@ const mainnetClient = new ApolloClient({
   }),
   cache: new InMemoryCache(),
 });
-
-const kovanProvider = 'https://kovan.infura.io/v3/6c78af073c2d493b8042572e88a51375';
-const mainnetProvider = 'https://mainnet.infura.io/v3/6c78af073c2d493b8042572e88a51375';
+console.log(process.env.INFURA_KEY);
+const kovanProvider = `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
+const mainnetProvider = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 
 const web3Kovan = new Web3(new Web3.providers.HttpProvider(kovanProvider));
 const web3Mainnet = new Web3(new Web3.providers.HttpProvider(mainnetProvider));
@@ -106,10 +108,10 @@ async function fetchDelegates(network: string) {
   let delegates = [];
   let newResults = 1000;
   if (network === 'kovan') {
-    while (newResults === 1000 && skip < 5001) {
+    while (newResults === 1000 && skip < 999) {
       let result = await kovanClient.query({
         query: GET_DELEGATES,
-        variables: { first: 1000, skip },
+        variables: { first: 500, skip },
       });
       delegates = delegates.concat(result.data.delegates);
       newResults = result.data.delegates.length;
@@ -117,10 +119,10 @@ async function fetchDelegates(network: string) {
     }
     return delegates;
   } else {
-    while (newResults === 1000 && skip < 5001) {
+    while (newResults === 1000 && skip < 999) {
       let result = await mainnetClient.query({
         query: GET_DELEGATES,
-        variables: { first: 1000, skip },
+        variables: { first: 500, skip },
       });
       delegates = delegates.concat(result.data.delegates);
       newResults = result.data.delegates.length;
@@ -149,9 +151,37 @@ async function parseDelegates(delegates, network) {
       }
       if (Math.abs(votingPower - delegate.totalVotingPower) < 0.1) {
         votingPowerMatchCount += 1;
+      } else {
+        console.log(
+          'VOTING POWER ERROR WITH ' +
+            delegate.id +
+            ' SUBGRAPH: ' +
+            delegate.totalVotingPower +
+            ' : CONTRACT: ' +
+            votingPower
+        );
+        console.log(
+          'AAVE BALANCE: ' + delegate.aaveBalance + '  STKAAVE BALANCE: ' + delegate.stkAaveBalance
+        );
       }
       if (Math.abs(propositionPower - delegate.totalPropositionPower) < 0.1) {
         propositionPowerMatchCount += 1;
+      } else {
+        console.log(
+          'PROPOSITION POWER ERROR WITH ' +
+            delegate.id +
+            ' SUBGRAPH: ' +
+            delegate.totalPropositionPower +
+            ' : CONTRACT: ' +
+            propositionPower
+        );
+        console.log(
+          'AAVE BALANCE: ' +
+            delegate.aaveBalance +
+            '  STKAAVE BALANCE: ' +
+            delegate.stkAaveBalance +
+            '\n'
+        );
       }
     })
   );
