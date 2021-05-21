@@ -113,25 +113,47 @@ type Delegate @entity {
   aaveVotingDelegate: Delegate!
   aavePropositionDelegate: Delegate!
 
-  "AAVE voting power delegated to this address"
-  aaveDelegatedVotingPowerRaw: BigInt!
-  aaveDelegatedVotingPower: BigDecimal!
+  "AAVE voting power for this address"
+  aaveTotalVotingPowerRaw: BigInt!
+  aaveTotalVotingPower: BigDecimal!
+
+  aaveTotalPropositionPowerRaw: BigInt!
+  aaveTotalPropositionPower: BigDecimal!
+
+  aaveDelegatedInVotingPowerRaw: BigInt!
+  aaveDelegatedInVotingPower: BigDecimal!
+
+  aaveDelegatedOutVotingPowerRaw: BigInt!
+  aaveDelegatedOutVotingPower: BigDecimal!
+
+  aaveDelegatedInPropositionPowerRaw: BigInt!
+  aaveDelegatedInPropositionPower: BigDecimal!
+
+  aaveDelegatedOutPropositionPowerRaw: BigInt!
+  aaveDelegatedOutPropositionPower: BigDecimal!
 
   "Delegate who will vote on your behalf"
   stkAaveVotingDelegate: Delegate!
   stkAavePropositionDelegate: Delegate!
 
-  "stkAAVE voting power delegated to this address"
-  stkAaveDelegatedVotingPowerRaw: BigInt!
-  stkAaveDelegatedVotingPower: BigDecimal!
+  "Total stkAAVE voting power this address"
+  stkAaveTotalVotingPowerRaw: BigInt!
+  stkAaveTotalVotingPower: BigDecimal!
 
-  "AAVE proposition power delegated to this address"
-  aaveDelegatedPropositionPowerRaw: BigInt!
-  aaveDelegatedPropositionPower: BigDecimal!
+  stkAaveTotalPropositionPowerRaw: BigInt!
+  stkAaveTotalPropositionPower: BigDecimal!
 
-  "stkAAVE proposition power delegated to this address"
-  stkAaveDelegatedPropositionPowerRaw: BigInt!
-  stkAaveDelegatedPropositionPower: BigDecimal!
+  stkAaveDelegatedInVotingPowerRaw: BigInt!
+  stkAaveDelegatedInVotingPower: BigDecimal!
+
+  stkAaveDelegatedOutVotingPowerRaw: BigInt!
+  stkAaveDelegatedOutVotingPower: BigDecimal!
+
+  stkAaveDelegatedInPropositionPowerRaw: BigInt!
+  stkAaveDelegatedInPropositionPower: BigDecimal!
+
+  stkAaveDelegatedOutPropositionPowerRaw: BigInt!
+  stkAaveDelegatedOutPropositionPower: BigDecimal!
 
   "Number of users represented for voting"
   usersVotingRepresentedAmount: Int!

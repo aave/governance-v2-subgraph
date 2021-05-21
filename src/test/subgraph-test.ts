@@ -108,10 +108,10 @@ async function fetchDelegates(network: string) {
   let delegates = [];
   let newResults = 1000;
   if (network === 'kovan') {
-    while (newResults === 1000 && skip < 999) {
+    while (newResults === 1000 && skip < 4999) {
       let result = await kovanClient.query({
         query: GET_DELEGATES,
-        variables: { first: 500, skip },
+        variables: { first: 1000, skip },
       });
       delegates = delegates.concat(result.data.delegates);
       newResults = result.data.delegates.length;
@@ -119,10 +119,10 @@ async function fetchDelegates(network: string) {
     }
     return delegates;
   } else {
-    while (newResults === 1000 && skip < 999) {
+    while (newResults === 1000 && skip < 4999) {
       let result = await mainnetClient.query({
         query: GET_DELEGATES,
-        variables: { first: 500, skip },
+        variables: { first: 1000, skip },
       });
       delegates = delegates.concat(result.data.delegates);
       newResults = result.data.delegates.length;

@@ -61,8 +61,6 @@ dataSources:
       eventHandlers:
         - event: DelegateChanged(indexed address,indexed address,uint8)
           handler: handleDelegateChanged
-        - event: DelegatedPowerChanged(indexed address,uint256,uint8)
-          handler: handleDelegatedPowerChanged
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ./src/mapping/aave-token.ts
@@ -87,6 +85,4 @@ dataSources:
           handler: handleTransfer
         - event: DelegateChanged(indexed address,indexed address,uint8)
           handler: handleDelegateChanged
-        - event: DelegatedPowerChanged(indexed address,uint256,uint8)
-          handler: handleDelegatedPowerChanged
       file: ./src/mapping/stake.ts
