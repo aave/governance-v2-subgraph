@@ -47,12 +47,14 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let proposalData = json.try_fromBytes(data as Bytes);
   let title: JSONValue | null = null;
   let shortDescription: JSONValue | null = null;
+  let aipNumber: JSONValue | null = null;
   let description: JSONValue | null = null;
   if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
     let data = proposalData.value.toObject();
     title = data.get('title');
     description = data.get('description');
     shortDescription = data.get('shortDescription');
+    aipNumber = data.get('aip');
   }
   if (shortDescription) {
     proposal.shortDescription = shortDescription.toString();
@@ -68,6 +70,9 @@ export function handleProposalCreated(event: ProposalCreated): void {
     proposal.title = title.toString();
   } else {
     proposal.title = 'NA';
+  }
+  if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
+    proposal.aipNumber = aipNumber.toBigInt();
   }
   proposal.state = event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
   proposal.ipfsHash = hash;
