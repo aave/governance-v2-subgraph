@@ -6,7 +6,7 @@
     "dev-environment": "npm i && tail -f /dev/null",
     "build": "graph build",
     "prepare:all": "npm run prepare:contracts && npm run prepare:subgraph",
-    "prepare:subgraph": "mustache ./config/${NETWORK:-kovan}.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:subgraph": "mustache ./config/${NETWORK:-kovan}.json subgraph.template.yaml > subgraph.yaml && npm run subgraph:codegen",
     "prepare:contracts": "rm -rf externals && npm run submodule:get:governance-v2 && npm run submodule:get:aave-token-v2 && npm run submodule:get:stake && npm run submodule:install && npm run submodule:compile-contracts",
     "submodule:get:governance-v2": "git submodule add -f https://github.com/aave/governance-v2.git externals/governance-v2",
     "submodule:get:aave-token-v2": "git submodule add -f https://github.com/aave/aave-token-v2.git externals/aave-token-v2",
