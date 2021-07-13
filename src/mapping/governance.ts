@@ -77,6 +77,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.state = event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
   proposal.ipfsHash = hash;
   proposal.creator = creator.id;
+  proposal.executor = event.params.executor.toHexString();
   proposal.targets = event.params.targets as Bytes[];
   proposal.values = event.params.values;
   proposal.signatures = event.params.signatures;
