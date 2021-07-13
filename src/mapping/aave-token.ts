@@ -2,10 +2,11 @@ import { log } from '@graphprotocol/graph-ts';
 import { DelegateChanged, Transfer } from '../../generated/AaveTokenV2/AaveTokenV2';
 import { Delegate } from '../../generated/schema';
 import { getOrInitDelegate } from '../helpers/initializers';
-import { BIGDECIMAL_ZERO, BIGINT_ZERO, VOTING_POWER, ZERO_ADDRESS } from '../utils/constants';
+import { BIGINT_ZERO, VOTING_POWER, ZERO_ADDRESS } from '../utils/constants';
 
 import { toDecimal } from '../utils/converters';
 
+// When a users delegated voting/proposition power changes, recompute AAVE and total voting/proposition power
 function retotal(delegate: Delegate, type: string): Delegate {
   if (type === 'vote') {
     delegate.aaveTotalVotingPowerRaw = delegate.aaveBalanceRaw
@@ -32,11 +33,12 @@ function retotal(delegate: Delegate, type: string): Delegate {
 export function handleTransfer(event: Transfer): void {
   let fromAddress = event.params.from.toHexString();
   let toAddress = event.params.to.toHexString();
+  let value = event.params.value;
 
   // fromHolder
   if (fromAddress != ZERO_ADDRESS) {
     let fromHolder = getOrInitDelegate(fromAddress);
-    fromHolder.aaveBalanceRaw = fromHolder.aaveBalanceRaw.minus(event.params.value);
+    fromHolder.aaveBalanceRaw = fromHolder.aaveBalanceRaw.minus(value);
     fromHolder.aaveBalance = toDecimal(fromHolder.aaveBalanceRaw);
 
     if (fromHolder.aaveBalanceRaw < BIGINT_ZERO) {
@@ -46,10 +48,11 @@ export function handleTransfer(event: Transfer): void {
       ]);
     }
 
+    // If a user is delegating their aave voting power to someone else, update the delegate's inVotingPower and the user's outVotingPower
     if (fromHolder.aaveVotingDelegate != fromHolder.id) {
       let votingDelegate = getOrInitDelegate(fromHolder.aaveVotingDelegate);
       votingDelegate.aaveDelegatedInVotingPowerRaw = votingDelegate.aaveDelegatedInVotingPowerRaw.minus(
-        event.params.value
+        value
       );
       votingDelegate.aaveDelegatedInVotingPower = toDecimal(
         votingDelegate.aaveDelegatedInVotingPowerRaw
@@ -58,15 +61,16 @@ export function handleTransfer(event: Transfer): void {
       votingDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
       votingDelegate.save();
       fromHolder.aaveDelegatedOutVotingPowerRaw = fromHolder.aaveDelegatedOutVotingPowerRaw.minus(
-        event.params.value
+        value
       );
       fromHolder.aaveDelegatedOutVotingPower = toDecimal(fromHolder.aaveDelegatedOutVotingPowerRaw);
     }
 
+    // If a user is delegating their aave proposition power to someone else, update the delegate's inPropositionPower and user's outPropositionPower
     if (fromHolder.aavePropositionDelegate != fromHolder.id) {
       let propositionDelegate = getOrInitDelegate(fromHolder.aavePropositionDelegate);
       propositionDelegate.aaveDelegatedInPropositionPowerRaw = propositionDelegate.aaveDelegatedInPropositionPowerRaw.minus(
-        event.params.value
+        value
       );
       propositionDelegate.aaveDelegatedInPropositionPower = toDecimal(
         propositionDelegate.aaveDelegatedInPropositionPowerRaw
@@ -75,12 +79,14 @@ export function handleTransfer(event: Transfer): void {
       propositionDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
       propositionDelegate.save();
       fromHolder.aaveDelegatedOutPropositionPowerRaw = fromHolder.aaveDelegatedOutPropositionPowerRaw.minus(
-        event.params.value
+        value
       );
       fromHolder.aaveDelegatedOutPropositionPower = toDecimal(
         fromHolder.aaveDelegatedOutPropositionPowerRaw
       );
     }
+
+    // Recompute user's voting/proposition power with updated balance and outgoing delegations
     fromHolder = retotal(fromHolder, 'vote');
     fromHolder = retotal(fromHolder, 'proposition');
     fromHolder.lastUpdateTimestamp = event.block.timestamp.toI32();
@@ -90,13 +96,14 @@ export function handleTransfer(event: Transfer): void {
   // toHolder
   if (toAddress != ZERO_ADDRESS) {
     let toHolder = getOrInitDelegate(toAddress);
-    toHolder.aaveBalanceRaw = toHolder.aaveBalanceRaw.plus(event.params.value);
+    toHolder.aaveBalanceRaw = toHolder.aaveBalanceRaw.plus(value);
     toHolder.aaveBalance = toDecimal(toHolder.aaveBalanceRaw);
 
+    // If a user is delegating their aave voting power to someone else, update the delegate's inVotingPower and the user's outVotingPower
     if (toHolder.aaveVotingDelegate != toHolder.id) {
       let votingDelegate = getOrInitDelegate(toHolder.aaveVotingDelegate);
       votingDelegate.aaveDelegatedInVotingPowerRaw = votingDelegate.aaveDelegatedInVotingPowerRaw.plus(
-        event.params.value
+        value
       );
       votingDelegate.aaveDelegatedInVotingPower = toDecimal(
         votingDelegate.aaveDelegatedInVotingPowerRaw
@@ -104,16 +111,15 @@ export function handleTransfer(event: Transfer): void {
       votingDelegate = retotal(votingDelegate, 'vote');
       votingDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
       votingDelegate.save();
-      toHolder.aaveDelegatedOutVotingPowerRaw = toHolder.aaveDelegatedOutVotingPowerRaw.plus(
-        event.params.value
-      );
+      toHolder.aaveDelegatedOutVotingPowerRaw = toHolder.aaveDelegatedOutVotingPowerRaw.plus(value);
       toHolder.aaveDelegatedOutVotingPower = toDecimal(toHolder.aaveDelegatedOutVotingPowerRaw);
     }
 
+    // If a user is delegating their aave proposition power to someone else, update the delegate's inPropositionPower and user's outPropositionPower
     if (toHolder.aavePropositionDelegate != toHolder.id) {
       let propositionDelegate = getOrInitDelegate(toHolder.aavePropositionDelegate);
       propositionDelegate.aaveDelegatedInPropositionPowerRaw = propositionDelegate.aaveDelegatedInPropositionPowerRaw.plus(
-        event.params.value
+        value
       );
       propositionDelegate.aaveDelegatedInPropositionPower = toDecimal(
         propositionDelegate.aaveDelegatedInPropositionPowerRaw
@@ -122,12 +128,13 @@ export function handleTransfer(event: Transfer): void {
       propositionDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
       propositionDelegate.save();
       toHolder.aaveDelegatedOutPropositionPowerRaw = toHolder.aaveDelegatedOutPropositionPowerRaw.plus(
-        event.params.value
+        value
       );
       toHolder.aaveDelegatedOutPropositionPower = toDecimal(
         toHolder.aaveDelegatedOutPropositionPowerRaw
       );
     }
+    // Recompute user's voting/proposition power with updated balance and outgoing delegations
     toHolder = retotal(toHolder, 'vote');
     toHolder = retotal(toHolder, 'proposition');
     toHolder.lastUpdateTimestamp = event.block.timestamp.toI32();
@@ -142,7 +149,7 @@ export function handleDelegateChanged(event: DelegateChanged): void {
   if (event.params.delegationType == VOTING_POWER) {
     let previousDelegate = getOrInitDelegate(delegator.aaveVotingDelegate);
 
-    // Subtract from previous delegate if delegator was not self-delegating
+    // Subtract from previous delegate if user was not self-delegating
     if (previousDelegate.id != delegator.id) {
       previousDelegate.aaveDelegatedInVotingPowerRaw = previousDelegate.aaveDelegatedInVotingPowerRaw.minus(
         delegator.aaveBalanceRaw
@@ -150,9 +157,13 @@ export function handleDelegateChanged(event: DelegateChanged): void {
       previousDelegate.aaveDelegatedInVotingPower = toDecimal(
         previousDelegate.aaveDelegatedInVotingPowerRaw
       );
+      previousDelegate = retotal(previousDelegate, 'vote');
+      previousDelegate.usersVotingRepresentedAmount =
+        previousDelegate.usersVotingRepresentedAmount - 1;
+      previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+      previousDelegate.save();
     }
-
-    // Add to new delegate if delegator is not delegating to themself, and set delegatedOutPower accordingly
+    // If newDelegate is not self, update delegate's inVotingPower and user's outVotingPower, else set user's outVotingPower to 0
     if (newDelegate.id === delegator.id) {
       delegator.aaveDelegatedOutVotingPowerRaw = BIGINT_ZERO;
       delegator.aaveDelegatedOutVotingPower = toDecimal(delegator.aaveDelegatedOutVotingPowerRaw);
@@ -163,24 +174,20 @@ export function handleDelegateChanged(event: DelegateChanged): void {
         delegator.aaveBalanceRaw
       );
       newDelegate.aaveDelegatedInVotingPower = toDecimal(newDelegate.aaveDelegatedInVotingPowerRaw);
+      newDelegate = retotal(newDelegate, 'vote');
+      newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1;
+      newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+      newDelegate.save();
     }
 
-    previousDelegate = retotal(previousDelegate, 'vote');
-    previousDelegate.usersVotingRepresentedAmount =
-      previousDelegate.usersVotingRepresentedAmount - 1;
-    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    previousDelegate.save();
+    // Recompute user's voting power and set newDelegate
     delegator = retotal(delegator, 'vote');
     delegator.aaveVotingDelegate = newDelegate.id;
     delegator.lastUpdateTimestamp = event.block.timestamp.toI32();
     delegator.save();
-    newDelegate = retotal(newDelegate, 'vote');
-    newDelegate.usersVotingRepresentedAmount = newDelegate.usersVotingRepresentedAmount + 1;
-    newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    newDelegate.save();
   } else {
     let previousDelegate = getOrInitDelegate(delegator.aavePropositionDelegate);
-    // Subtract from previous delegate if delegator was not self-delegating
+    // Subtract from previous delegate if user was not self-delegating
     if (previousDelegate.id != delegator.id) {
       previousDelegate.aaveDelegatedInPropositionPowerRaw = previousDelegate.aaveDelegatedInPropositionPowerRaw.minus(
         delegator.aaveBalanceRaw
@@ -188,9 +195,14 @@ export function handleDelegateChanged(event: DelegateChanged): void {
       previousDelegate.aaveDelegatedInPropositionPower = toDecimal(
         previousDelegate.aaveDelegatedInPropositionPowerRaw
       );
+      previousDelegate = retotal(previousDelegate, 'proposition');
+      previousDelegate.usersPropositionRepresentedAmount =
+        previousDelegate.usersPropositionRepresentedAmount - 1;
+      previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+      previousDelegate.save();
     }
 
-    // Add to new delegate if delegator is not delegating to themself, and set delegatedOutPower accordingly
+    // If newDelegate is not self, update delegate's inVotingPower and user's outVotingPower, else set user's outVotingPower to 0
     if (newDelegate.id === delegator.id) {
       delegator.aaveDelegatedOutPropositionPowerRaw = BIGINT_ZERO;
       delegator.aaveDelegatedOutPropositionPower = toDecimal(
@@ -207,20 +219,17 @@ export function handleDelegateChanged(event: DelegateChanged): void {
       newDelegate.aaveDelegatedInPropositionPower = toDecimal(
         newDelegate.aaveDelegatedInPropositionPowerRaw
       );
+      newDelegate = retotal(newDelegate, 'proposition');
+      newDelegate.usersPropositionRepresentedAmount =
+        newDelegate.usersPropositionRepresentedAmount + 1;
+      newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
+      newDelegate.save();
     }
-    previousDelegate = retotal(previousDelegate, 'proposition');
-    previousDelegate.usersPropositionRepresentedAmount =
-      previousDelegate.usersPropositionRepresentedAmount - 1;
-    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    previousDelegate.save();
+
+    // Recompute user's proposition power and set newDelegate
     delegator.aavePropositionDelegate = newDelegate.id;
     delegator = retotal(delegator, 'proposition');
     delegator.lastUpdateTimestamp = event.block.timestamp.toI32();
     delegator.save();
-    newDelegate = retotal(newDelegate, 'proposition');
-    newDelegate.usersPropositionRepresentedAmount =
-      newDelegate.usersPropositionRepresentedAmount + 1;
-    newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    newDelegate.save();
   }
 }
