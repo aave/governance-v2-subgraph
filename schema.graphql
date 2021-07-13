@@ -49,7 +49,6 @@ type Proposal @entity {
   governanceStrategy: Bytes!
   currentYesVote: BigInt!
   currentNoVote: BigInt!
-  winner: Winner!
   votes: [Vote!]! @derivedFrom(field: "proposal")
   createdTimestamp: Int!
   executionTime: BigInt

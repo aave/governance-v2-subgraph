@@ -96,7 +96,6 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.governanceStrategy = Bytes.fromI32(0) as Bytes;
     proposal.currentYesVote = zeroBI();
     proposal.currentNoVote = zeroBI();
-    proposal.winner = NA;
     proposal.createdTimestamp = zeroBI().toI32();
     proposal.lastUpdateTimestamp = zeroBI().toI32();
     proposal.lastUpdateBlock = zeroBI();
