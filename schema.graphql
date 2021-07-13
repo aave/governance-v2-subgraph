@@ -37,7 +37,7 @@ type Proposal @entity {
   id: ID!
   state: ProposalState!
   ipfsHash: String!
-  creator: Bytes!
+  creator: Delegate!
   executor: Executor
   targets: [Bytes!]
   values: [BigInt!]
@@ -58,6 +58,7 @@ type Proposal @entity {
   lastUpdateTimestamp: Int!
   lastUpdateBlock: BigInt!
   title: String!
+  description: String!
   shortDescription: String!
   govContract: Bytes!
   totalPropositionSupply: BigInt!
@@ -67,40 +68,101 @@ type Proposal @entity {
   aipNumber: BigInt!
   author: String!
   discussions: String!
-  # voteBlock: BigInt!
-  # validateTimestamp: Int!
-  # validateBlock: BigInt!
-  # executeTimestamp: Int!
-  # executeBlock: BigInt!
 }
 
 type Vote @entity {
   """
-   voter:proposalid
+  voter:proposalid
   """
   id: ID!
   proposal: Proposal!
-  voter: Bytes!
+  voter: Delegate!
   support: Boolean!
   votingPower: BigInt!
   timestamp: Int!
 }
 
-# type PropositionPowerTransfer @entity {
-#   """ transaction hash """
-#   id: ID!
-#   from: Bytes!
-#   to: Bytes!
-#   value: BigInt!
-#   timestamp: Int!
-# }
+# Address which holds governance tokens (AAVE, stkAAVE) or has been delegated voting or proposition power from another address
+type Delegate @entity {
+  "Wallet address"
+  id: ID!
 
-# type GovernanceSummary @entity {
-#   """ zero bytes """
-#   id: ID!
-#   totalProposalsCreated: Int!
-#   totalVotingProposals: Int!
-#   totalValidatingProposals: Int!
-#   totalExecutedProposals: Int!
-#   lastUpdateTimestamp: Int!
-# }
+  "AAVE Balance"
+  aaveBalanceRaw: BigInt!
+  aaveBalance: BigDecimal!
+
+  "stkAAVE Balance"
+  stkAaveBalanceRaw: BigInt!
+  stkAaveBalance: BigDecimal!
+
+  "aaveDelegatedVotingPower + stkAaveDelegatedVotingPower"
+  totalVotingPowerRaw: BigInt!
+  totalVotingPower: BigDecimal!
+
+  "aaveDelegatedPropositionPower + stkAaveDelegatedPropositionPower"
+  totalPropositionPowerRaw: BigInt!
+  totalPropositionPower: BigDecimal!
+
+  "Votes which this delegated has participated in"
+  votes: [Vote!]! @derivedFrom(field: "voter")
+
+  "Proposals which this delegate has created"
+  proposals: [Proposal!]! @derivedFrom(field: "creator")
+
+  "Delegate who will vote on your behalf"
+  aaveVotingDelegate: Delegate!
+  aavePropositionDelegate: Delegate!
+
+  "AAVE voting power for this address"
+  aaveTotalVotingPowerRaw: BigInt!
+  aaveTotalVotingPower: BigDecimal!
+
+  aaveTotalPropositionPowerRaw: BigInt!
+  aaveTotalPropositionPower: BigDecimal!
+
+  aaveDelegatedInVotingPowerRaw: BigInt!
+  aaveDelegatedInVotingPower: BigDecimal!
+
+  aaveDelegatedOutVotingPowerRaw: BigInt!
+  aaveDelegatedOutVotingPower: BigDecimal!
+
+  aaveDelegatedInPropositionPowerRaw: BigInt!
+  aaveDelegatedInPropositionPower: BigDecimal!
+
+  aaveDelegatedOutPropositionPowerRaw: BigInt!
+  aaveDelegatedOutPropositionPower: BigDecimal!
+
+  "Delegate who will vote on your behalf"
+  stkAaveVotingDelegate: Delegate!
+  stkAavePropositionDelegate: Delegate!
+
+  "Total stkAAVE voting power this address"
+  stkAaveTotalVotingPowerRaw: BigInt!
+  stkAaveTotalVotingPower: BigDecimal!
+
+  stkAaveTotalPropositionPowerRaw: BigInt!
+  stkAaveTotalPropositionPower: BigDecimal!
+
+  stkAaveDelegatedInVotingPowerRaw: BigInt!
+  stkAaveDelegatedInVotingPower: BigDecimal!
+
+  stkAaveDelegatedOutVotingPowerRaw: BigInt!
+  stkAaveDelegatedOutVotingPower: BigDecimal!
+
+  stkAaveDelegatedInPropositionPowerRaw: BigInt!
+  stkAaveDelegatedInPropositionPower: BigDecimal!
+
+  stkAaveDelegatedOutPropositionPowerRaw: BigInt!
+  stkAaveDelegatedOutPropositionPower: BigDecimal!
+
+  "Number of users represented for voting"
+  usersVotingRepresentedAmount: Int!
+  "Number of users represented for creating proposals"
+  usersPropositionRepresentedAmount: Int!
+
+  "Number of votes a user has cast"
+  numVotes: Int!
+  numProposals: Int!
+
+  lastUpdateTimestamp: Int!
+}
