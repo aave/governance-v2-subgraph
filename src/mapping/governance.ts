@@ -5,6 +5,7 @@ import {
   STATUS_EXECUTED,
   STATUS_PENDING,
   STATUS_QUEUED,
+  NA,
 } from '../utils/constants';
 import { Proposal, Vote, Executor } from '../../generated/schema';
 import { IExecutor } from '../../generated/AaveGovernanceV2/IExecutor';
@@ -19,13 +20,6 @@ import {
   ExecutorUnauthorized,
 } from '../../generated/AaveGovernanceV2/AaveGovernanceV2';
 import { getOrInitProposal, getOrInitDelegate } from '../helpers/initializers';
-import { BIGINT_ZERO } from '../utils/constants';
-
-enum VoteType {
-  Abstain = 0,
-  Yes = 1,
-  No = 2,
-}
 
 function getProposal(proposalId: string, fn: string): Proposal | null {
   let proposal = Proposal.load(proposalId);
@@ -36,46 +30,65 @@ function getProposal(proposalId: string, fn: string): Proposal | null {
 }
 
 export function handleProposalCreated(event: ProposalCreated): void {
-  let proposal = getOrInitProposal(event.params.id.toString());
-  let creator = getOrInitDelegate(event.params.creator.toHexString());
-  creator.numProposals = creator.numProposals + 1;
-  creator.save();
-
-  // Get ipfs proposal information
   let hash = Bytes.fromHexString('1220' + event.params.ipfsHash.toHexString().slice(2)).toBase58();
   let data = ipfs.cat(hash);
   let proposalData = json.try_fromBytes(data as Bytes);
   let title: JSONValue | null = null;
   let shortDescription: JSONValue | null = null;
-  let aipNumber: JSONValue | null = null;
   let description: JSONValue | null = null;
+  let author: JSONValue | null = null;
+  let aipNumber: JSONValue | null = null;
+  let discussions: JSONValue | null = null;
+
   if (proposalData.isOk && proposalData.value.kind == JSONValueKind.OBJECT) {
     let data = proposalData.value.toObject();
     title = data.get('title');
     description = data.get('description');
     shortDescription = data.get('shortDescription');
+    author = data.get('author');
+    discussions = data.get('discussions');
     aipNumber = data.get('aip');
   }
-  if (shortDescription) {
-    proposal.shortDescription = shortDescription.toString();
-  } else {
-    proposal.shortDescription = 'NA';
-  }
-  if (description) {
-    proposal.description = description.toString();
-  } else {
-    proposal.description = 'NA';
-  }
+  let proposal = getOrInitProposal(event.params.id.toString());
   if (title) {
     proposal.title = title.toString();
   } else {
-    proposal.title = 'NA';
+    proposal.title = NA;
+  }
+  if (author) {
+    proposal.author = author.toString();
+  } else {
+    proposal.author = NA;
+  }
+  if (discussions) {
+    proposal.discussions = discussions.toString();
+  } else {
+    proposal.discussions = NA;
   }
   if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
     proposal.aipNumber = aipNumber.toBigInt();
   }
-  proposal.state = event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
-  proposal.ipfsHash = hash;
+  if (shortDescription) {
+    proposal.shortDescription = shortDescription.toString();
+  } else {
+    proposal.shortDescription = NA;
+  }
+  if (description) {
+    proposal.description = description.toString();
+  } else {
+    proposal.description = NA;
+  }
+
+  let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
+  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(
+    event.params.startBlock
+  );
+  proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
+
+  proposal.govContract = event.address;
+  let creator = getOrInitDelegate(event.params.creator.toHexString());
+  creator.numProposals = creator.numProposals + 1;
+  creator.save();
   proposal.creator = creator.id;
   proposal.executor = event.params.executor.toHexString();
   proposal.targets = event.params.targets as Bytes[];
@@ -85,13 +98,9 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.withDelegatecalls = event.params.withDelegatecalls;
   proposal.startBlock = event.params.startBlock;
   proposal.endBlock = event.params.endBlock;
-  let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
-  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(
-    event.params.startBlock
-  );
-  proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
-  proposal.govContract = event.address;
+  proposal.state = event.block.number >= proposal.startBlock ? STATUS_ACTIVE : STATUS_PENDING;
   proposal.governanceStrategy = event.params.strategy;
+  proposal.ipfsHash = hash;
   proposal.lastUpdateBlock = event.block.number;
   proposal.createdTimestamp = event.block.timestamp.toI32();
   proposal.createdBlockNumber = event.block.number;
@@ -100,11 +109,15 @@ export function handleProposalCreated(event: ProposalCreated): void {
 }
 
 export function handleProposalQueued(event: ProposalQueued): void {
-  let proposal = getOrInitProposal(event.params.id.toString());
-
-  proposal.state = STATUS_QUEUED;
-  proposal.executionTime = event.params.executionTime;
-  proposal.save();
+  let proposal = getProposal(event.params.id.toString(), 'ProposalQueued');
+  if (proposal) {
+    proposal.state = STATUS_QUEUED;
+    proposal.executionTime = event.params.executionTime;
+    proposal.initiatorQueueing = event.params.initiatorQueueing;
+    proposal.lastUpdateBlock = event.block.number;
+    proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
+    proposal.save();
+  }
 }
 
 export function handleProposalExecuted(event: ProposalExecuted): void {
