@@ -84,7 +84,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal = new Proposal(proposalId);
     proposal.state = STATUS_PENDING;
     proposal.ipfsHash = NA;
-    proposal.creator = zeroAddress().toString();
+    proposal.user = zeroAddress().toString();
     proposal.executor = NA;
     proposal.targets = [Bytes.fromI32(0) as Bytes];
     proposal.values = [zeroBI()];
@@ -96,7 +96,7 @@ export function getOrInitProposal(proposalId: string): Proposal {
     proposal.governanceStrategy = Bytes.fromI32(0) as Bytes;
     proposal.currentYesVote = zeroBI();
     proposal.currentNoVote = zeroBI();
-    proposal.createdTimestamp = zeroBI().toI32();
+    proposal.timestamp = zeroBI().toI32();
     proposal.lastUpdateTimestamp = zeroBI().toI32();
     proposal.lastUpdateBlock = zeroBI();
     proposal.title = NA;
