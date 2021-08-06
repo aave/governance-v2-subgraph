@@ -4,6 +4,6 @@
   "aaveGovernanceV2StartBlock": 11427398,
   "aaveTokenV2Address": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
   "aaveTokenV2StartBlock": 10978870,
-  "AaveStakeTokenAddress": "0x4da27a545c0c5b758a6ba100e3a049001de870f5",
-  "AaveStakeTokenStartBlock": 10927010
+  "aaveStakeTokenAddress": "0x4da27a545c0c5b758a6ba100e3a049001de870f5",
+  "aaveStakeTokenStartBlock": 10927010
 }

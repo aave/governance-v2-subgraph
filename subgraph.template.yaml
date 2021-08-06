@@ -69,8 +69,8 @@ dataSources:
     network: {{network}}
     source:
       abi: StakedTokenV3
-      address: "{{AaveStakeTokenAddress}}"
-      startBlock: {{AaveStakeTokenStartBlock}}
+      address: "{{aaveStakeTokenAddress}}"
+      startBlock: {{aaveStakeTokenStartBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
