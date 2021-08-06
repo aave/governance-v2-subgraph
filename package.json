@@ -19,11 +19,12 @@
     "subgraph:create:selfhosted:mainnet": "graph create aave/governance-v2 --node http://localhost:8020",
     "subgraph:deploy:hosted": "graph deploy $SLUG --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --access-token $ACCESS_TOKEN",
     "subgraph:deploy:selfhosted": "graph deploy $SLUG --ipfs http://localhost:5001 --node http://localhost:8020",
-    "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
-    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:hosted",
+    "deploy:hosted:kovan": "NETWORK=kovan env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-kovan env-cmd npm run subgraph:deploy:hosted",
+    "deploy:hosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aschmidt20/governance-v2-delegate env-cmd npm run subgraph:deploy:hosted",
     "deploy:selfhosted:mainnet": "NETWORK=mainnet env-cmd npm run prepare:subgraph && SLUG=aave/governance-v2 env-cmd npm run subgraph:deploy:selfhosted",
-    "test-kovan": "ts-node src/test/subgraph-test.ts kovan",
-    "test-mainnet": "ts-node src/test/subgraph-test.ts mainnet"
+    "generate-types": "typechain --target=ethers-v5 --out-dir src/contracts 'externals/aave-token-v2/artifacts/contracts/token/AaveTokenV2.sol/AaveTokenV2.json' 'externals/stake/artifacts/contracts/stake/StakedTokenV3.sol/StakedTokenV3.json'",
+    "test-kovan": "ts-node src/test/subgraph-test.ts Kovan",
+    "test-mainnet": "ts-node src/test/subgraph-test.ts Mainnet"
   },
   "repository": {
     "type": "git",
@@ -51,11 +52,10 @@
   "license": "MIT",
   "dependencies": {
     "@apollo/client": "^3.3.16",
+    "@typechain/ethers-v5": "^7.0.1",
     "cross-fetch": "^3.1.4",
     "dotenv": "^9.0.2",
-    "graphql": "^14.7.0",
-    "typescript": "3.5.3",
-    "web3": "^1.3.5"
+    "graphql": "^14.7.0"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
@@ -68,6 +68,7 @@
     "lint-staged": "^9.2.5",
     "mustache": "^3.1.0",
     "prettier": "^1.18.2",
-    "typescript": "3.5.3"
+    "typechain": "^5.1.2",
+    "typescript": "^4.3.5"
   }
 }

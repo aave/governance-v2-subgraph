@@ -1,13 +1,12 @@
 import kovanJson from '../../config/kovan.json';
 import mainnetJson from '../../config/mainnet.json';
-import governanceInterface from '../../externals/governance-v2/artifacts/contracts/governance/AaveGovernanceV2.sol/AaveGovernanceV2.json';
-import aaveInterface from '../../externals/aave-token-v2/artifacts/contracts/token/AaveTokenV2.sol/AaveTokenV2.json';
-import stkAaveInterface from '../../externals/stake/artifacts/contracts/stake/StakedTokenV3.sol/StakedTokenV3.json';
 import { GET_DELEGATES } from './query';
-import Web3 from 'web3';
+import { utils, ethers, BigNumber } from 'ethers';
 import fetch from 'cross-fetch';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client/core';
-
+import { AaveTokenV2__factory } from '../contracts/factories/AaveTokenV2__factory';
+import { StakedTokenV3__factory } from '../contracts/factories/StakedTokenV3__factory';
+import { Delegate } from '../../generated/schema';
 require('dotenv').config();
 
 const kovanClient = new ApolloClient({
@@ -25,89 +24,95 @@ const mainnetClient = new ApolloClient({
   }),
   cache: new InMemoryCache(),
 });
-console.log(process.env.INFURA_KEY);
-const kovanProvider = `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
-const mainnetProvider = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 
-const web3Kovan = new Web3(new Web3.providers.HttpProvider(kovanProvider));
-const web3Mainnet = new Web3(new Web3.providers.HttpProvider(mainnetProvider));
-
-const governanceAbi = governanceInterface.abi as any;
-const aaveAbi = aaveInterface.abi as any;
-const stakeAbi = stkAaveInterface.abi as any;
-
-const kovanGovernance = new web3Kovan.eth.Contract(
-  governanceAbi,
-  kovanJson.aaveGovernanceV2Address
+const kovanProvider = new ethers.providers.JsonRpcBatchProvider(
+  `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
 );
-const kovanAaveToken = new web3Kovan.eth.Contract(aaveAbi, kovanJson.aaveTokenV2Address);
-const kovanStkAaveToken = new web3Kovan.eth.Contract(aaveAbi, kovanJson.AaveStakeTokenAddress);
-
-const mainnetGovernance = new web3Mainnet.eth.Contract(
-  governanceAbi,
-  mainnetJson.aaveGovernanceV2Address
-);
-const mainnetAaveToken = new web3Mainnet.eth.Contract(aaveAbi, mainnetJson.aaveTokenV2Address);
-const mainnetStkAaveToken = new web3Mainnet.eth.Contract(
-  stakeAbi,
-  mainnetJson.AaveStakeTokenAddress
+const mainnetProvider = new ethers.providers.JsonRpcBatchProvider(
+  `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
 );
 
-async function getBalance(network: string, token: string, address: string) {
-  let result = 0;
-  if (network === 'kovan') {
-    if (token === 'aave') {
-      result = await kovanAaveToken.methods.balanceOf(address).call();
-      result = result / Math.pow(10, 18);
-    } else {
-      result = await kovanStkAaveToken.methods.balanceOf(address).call();
-      result = result / Math.pow(10, 18);
-    }
-  } else {
-    if (token === 'aave') {
-      result = await mainnetAaveToken.methods.balanceOf(address).call();
-      result = result / Math.pow(10, 18);
-    } else {
-      result = await mainnetStkAaveToken.methods.balanceOf(address).call();
-      result = result / Math.pow(10, 18);
-    }
-  }
-  return result;
+const kovanAaveToken = AaveTokenV2__factory.connect(kovanJson.aaveTokenV2Address, kovanProvider);
+const kovanStkAaveToken = StakedTokenV3__factory.connect(
+  kovanJson.aaveStakeTokenAddress,
+  kovanProvider
+);
+
+const mainnetAaveToken = AaveTokenV2__factory.connect(
+  mainnetJson.aaveTokenV2Address,
+  mainnetProvider
+);
+const mainnetStkAaveToken = StakedTokenV3__factory.connect(
+  mainnetJson.aaveStakeTokenAddress,
+  mainnetProvider
+);
+
+export enum Network {
+  Kovan,
+  Mainnet,
 }
 
-async function getPower(network: string, type: string, address: string) {
-  if (network === 'kovan') {
-    if (type === 'vote') {
-      const aaveVP = await kovanAaveToken.methods.getPowerCurrent(address, 0).call();
-      const stkAaveVP = await kovanStkAaveToken.methods.getPowerCurrent(address, 0).call();
-      const votingPower = aaveVP / Math.pow(10, 18) + stkAaveVP / Math.pow(10, 18);
-      return votingPower;
+export enum Token {
+  Aave,
+  StkAave,
+}
+
+export enum PowerType {
+  Vote,
+  Proposition,
+}
+
+async function getBalance(network: Network, token: Token, address: string) {
+  let result: BigNumber;
+  if (network === Network.Kovan) {
+    if (token === Token.Aave) {
+      result = await kovanAaveToken.balanceOf(address);
     } else {
-      const aavePP = await kovanAaveToken.methods.getPowerCurrent(address, 1).call();
-      const stkAavePP = await kovanStkAaveToken.methods.getPowerCurrent(address, 1).call();
-      const propositionPower = aavePP / Math.pow(10, 18) + stkAavePP / Math.pow(10, 18);
-      return propositionPower;
+      result = await kovanStkAaveToken.balanceOf(address);
     }
   } else {
-    if (type === 'vote') {
-      const aaveVP = await mainnetAaveToken.methods.getPowerCurrent(address, 0).call();
-      const stkAaveVP = await mainnetStkAaveToken.methods.getPowerCurrent(address, 0).call();
-      const votingPower = aaveVP / Math.pow(10, 18) + stkAaveVP / Math.pow(10, 18);
-      return votingPower;
+    if (token === Token.Aave) {
+      result = await mainnetAaveToken.balanceOf(address);
     } else {
-      const aavePP = await mainnetAaveToken.methods.getPowerCurrent(address, 1).call();
-      const stkAavePP = await mainnetStkAaveToken.methods.getPowerCurrent(address, 1).call();
-      const propositonPower = aavePP / Math.pow(10, 18) + stkAavePP / Math.pow(10, 18);
-      return propositonPower;
+      result = await mainnetStkAaveToken.balanceOf(address);
+    }
+  }
+  return Number(utils.formatEther(result));
+}
+
+async function getPower(network: Network, powerType: PowerType, address: string) {
+  if (network === Network.Kovan) {
+    if (powerType === PowerType.Vote) {
+      const aaveVP = await kovanAaveToken.getPowerCurrent(address, 0);
+      const stkAaveVP = await kovanStkAaveToken.getPowerCurrent(address, 0);
+      const votingPower = aaveVP.add(stkAaveVP);
+      return Number(utils.formatEther(votingPower));
+    } else {
+      const aavePP = await kovanAaveToken.getPowerCurrent(address, 1);
+      const stkAavePP = await kovanStkAaveToken.getPowerCurrent(address, 1);
+      const propositionPower = aavePP.add(stkAavePP);
+      return Number(utils.formatEther(propositionPower));
+    }
+  } else {
+    if (powerType === PowerType.Vote) {
+      const aaveVP = await mainnetAaveToken.getPowerCurrent(address, 0);
+      const stkAaveVP = await mainnetStkAaveToken.getPowerCurrent(address, 0);
+      const votingPower = aaveVP.add(stkAaveVP);
+      return Number(utils.formatEther(votingPower));
+    } else {
+      const aavePP = await mainnetAaveToken.getPowerCurrent(address, 1);
+      const stkAavePP = await mainnetStkAaveToken.getPowerCurrent(address, 1);
+      const propositonPower = aavePP.add(stkAavePP);
+      return Number(utils.formatEther(propositonPower));
     }
   }
 }
 
-async function fetchDelegates(network: string) {
+async function fetchDelegates(network: Network) {
   let skip = 0;
   let delegates = [];
   let newResults = 1000;
-  if (network === 'kovan') {
+  if (network === Network.Kovan) {
     while (newResults === 1000 && skip < 4999) {
       let result = await kovanClient.query({
         query: GET_DELEGATES,
@@ -132,24 +137,24 @@ async function fetchDelegates(network: string) {
   }
 }
 
-async function parseDelegates(delegates, network) {
+async function parseDelegates(delegates: Delegate[], network: Network) {
   let aaveBalanceMatchCount = 0;
   let stkAaveBalanceMatchCount = 0;
   let votingPowerMatchCount = 0;
   let propositionPowerMatchCount = 0;
   await Promise.all(
     delegates.map(async delegate => {
-      let aaveBalance = await getBalance(network, 'aave', delegate.id);
-      let stkAaveBalance = await getBalance(network, 'stkaave', delegate.id);
-      let votingPower = await getPower(network, 'vote', delegate.id);
-      let propositionPower = await getPower(network, 'proposition', delegate.id);
-      if (Math.abs(aaveBalance - delegate.aaveBalance) < 0.1) {
+      const aaveBalance = await getBalance(network, Token.Aave, delegate.id);
+      const stkAaveBalance = await getBalance(network, Token.StkAave, delegate.id);
+      const votingPower = await getPower(network, PowerType.Vote, delegate.id);
+      const propositionPower = await getPower(network, PowerType.Proposition, delegate.id);
+      if (Math.abs(aaveBalance - Number(delegate.aaveBalance)) === 0) {
         aaveBalanceMatchCount += 1;
       }
-      if (Math.abs(stkAaveBalance - delegate.stkAaveBalance) < 0.1) {
+      if (Math.abs(stkAaveBalance - Number(delegate.stkAaveBalance)) === 0) {
         stkAaveBalanceMatchCount += 1;
       }
-      if (Math.abs(votingPower - delegate.totalVotingPower) < 0.1) {
+      if (Math.abs(votingPower - Number(delegate.totalVotingPower)) === 0) {
         votingPowerMatchCount += 1;
       } else {
         console.log(
@@ -164,7 +169,7 @@ async function parseDelegates(delegates, network) {
           'AAVE BALANCE: ' + delegate.aaveBalance + '  STKAAVE BALANCE: ' + delegate.stkAaveBalance
         );
       }
-      if (Math.abs(propositionPower - delegate.totalPropositionPower) < 0.1) {
+      if (Math.abs(propositionPower - Number(delegate.totalPropositionPower)) === 0) {
         propositionPowerMatchCount += 1;
       } else {
         console.log(
@@ -224,22 +229,25 @@ async function parseDelegates(delegates, network) {
   console.log('\n');
 }
 
-async function testSubgraph(network: string) {
-  if (network === 'kovan') {
+async function testSubgraph(network: Network) {
+  if (network === Network.Kovan) {
     console.log('Testing Kovan\n');
-    const delegates = await fetchDelegates('kovan');
+    // Fetch delegates form subgraph
+    const delegates = await fetchDelegates(network);
     console.log('Delegates Found: ' + delegates.length + '\n');
-    parseDelegates(delegates, 'kovan');
-  } else if (network === 'mainnet') {
-    console.log('Testing Mainnet\n');
-    const delegates = await fetchDelegates('mainnet');
-    console.log('Delegates Found: ' + delegates.length + '\n');
-    parseDelegates(delegates, 'mainnet');
+    parseDelegates(delegates, network);
   } else {
-    console.log('kovan and mainnet are the only supported networks');
-    return;
+    console.log('Testing Mainnet\n');
+    // Fetch delegates from subgraph
+    const delegates = await fetchDelegates(network);
+    console.log('Delegates Found: ' + delegates.length + '\n');
+    parseDelegates(delegates, network);
   }
 }
 
-const network = process.argv[2];
-testSubgraph(network);
+const input: string = process.argv[2];
+if ((<any>Network)[input] !== undefined) {
+  testSubgraph(Network[input]);
+} else {
+  console.log('Network must be one of {Kovan, Mainnet}');
+}

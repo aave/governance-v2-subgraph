@@ -7,3 +7,4 @@ dist/
 subgraph.yaml
 generated/
 .editorconfig
+src/contracts/
