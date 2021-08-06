@@ -23,3 +23,8 @@ export const YES_WINS = 'Yes';
 export const NO_WINS = 'No';
 export const ABSTAIN_WINS = 'Abstain';
 export const NA = 'Na';
+
+export const VOTING_CONSTANT = 'Voting';
+export const PROPOSITION_CONSTANT = 'Proposition';
+export const AAVE_CONSTANT = 'Aave';
+export const STKAAVE_CONSTANT = 'StkAave';
