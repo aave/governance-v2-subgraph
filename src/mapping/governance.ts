@@ -52,31 +52,21 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let proposal = getOrInitProposal(event.params.id.toString());
   if (title) {
     proposal.title = title.toString();
-  } else {
-    proposal.title = NA;
   }
   if (author) {
     proposal.author = author.toString();
-  } else {
-    proposal.author = NA;
   }
   if (discussions) {
     proposal.discussions = discussions.toString();
-  } else {
-    proposal.discussions = NA;
   }
   if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
     proposal.aipNumber = aipNumber.toBigInt();
   }
   if (shortDescription) {
     proposal.shortDescription = shortDescription.toString();
-  } else {
-    proposal.shortDescription = NA;
   }
   if (description) {
     proposal.description = description.toString();
-  } else {
-    proposal.description = NA;
   }
 
   let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
@@ -89,7 +79,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   let creator = getOrInitDelegate(event.params.creator.toHexString());
   creator.numProposals = creator.numProposals + 1;
   creator.save();
-  proposal.creator = creator.id;
+  proposal.user = creator.id;
   proposal.executor = event.params.executor.toHexString();
   proposal.targets = event.params.targets as Bytes[];
   proposal.values = event.params.values;
@@ -102,7 +92,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   proposal.governanceStrategy = event.params.strategy;
   proposal.ipfsHash = hash;
   proposal.lastUpdateBlock = event.block.number;
-  proposal.createdTimestamp = event.block.timestamp.toI32();
+  proposal.timestamp = event.block.timestamp.toI32();
   proposal.createdBlockNumber = event.block.number;
   proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
   proposal.save();
@@ -177,7 +167,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
   let vote = Vote.load(id) || new Vote(id);
   vote.proposal = event.params.id.toString();
   vote.support = event.params.support;
-  vote.voter = voterDel.id;
+  vote.user = voterDel.id;
   vote.votingPower = event.params.votingPower;
   vote.timestamp = event.block.timestamp.toI32();
   vote.save();
