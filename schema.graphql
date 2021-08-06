@@ -30,14 +30,23 @@ type Executor @entity {
   pendingAdmin: Bytes
 }
 
-type Proposal @entity {
+interface Action @entity {
+  id: ID!
+  user: Delegate!
+  timestamp: Int!
+}
+
+type Proposal implements Action @entity {
   """
   proposal id
   """
   id: ID!
+  "created timestamp"
+  timestamp: Int!
   state: ProposalState!
   ipfsHash: String!
-  creator: Delegate!
+  "creator"
+  user: Delegate!
   executor: Executor
   targets: [Bytes!]
   values: [BigInt!]
@@ -50,7 +59,6 @@ type Proposal @entity {
   currentYesVote: BigInt!
   currentNoVote: BigInt!
   votes: [Vote!]! @derivedFrom(field: "proposal")
-  createdTimestamp: Int!
   executionTime: BigInt
   initiatorQueueing: Bytes
   initiatorExecution: Bytes
@@ -69,16 +77,38 @@ type Proposal @entity {
   discussions: String!
 }
 
-type Vote @entity {
+type Vote implements Action @entity {
   """
   voter:proposalid
   """
   id: ID!
+  "voter"
+  user: Delegate!
+  timestamp: Int!
   proposal: Proposal!
-  voter: Delegate!
   support: Boolean!
   votingPower: BigInt!
+}
+
+enum PowerType {
+  Voting
+  Proposition
+}
+
+enum VotingAsset {
+  Aave
+  StkAave
+}
+
+type Delegation implements Action @entity {
+  id: ID!
+  user: Delegate!
   timestamp: Int!
+  powerType: PowerType!
+  amountRaw: BigInt!
+  amount: BigDecimal!
+  delegate: Delegate!
+  asset: VotingAsset!
 }
 
 # Address which holds governance tokens (AAVE, stkAAVE) or has been delegated voting or proposition power from another address
@@ -94,7 +124,7 @@ type Delegate @entity {
   stkAaveBalanceRaw: BigInt!
   stkAaveBalance: BigDecimal!
 
-  "aaveDelegatedVotingPower + stkAaveDelegatedVotingPower"
+  "aaveTotalVotingPower + stkAaveTotalVotingPower"
   totalVotingPowerRaw: BigInt!
   totalVotingPower: BigDecimal!
 
@@ -102,17 +132,20 @@ type Delegate @entity {
   totalPropositionPowerRaw: BigInt!
   totalPropositionPower: BigDecimal!
 
-  "Votes which this delegated has participated in"
-  votes: [Vote!]! @derivedFrom(field: "voter")
+  "Votes which this user has participated in"
+  votes: [Vote!]! @derivedFrom(field: "user")
 
-  "Proposals which this delegate has created"
-  proposals: [Proposal!]! @derivedFrom(field: "creator")
+  "Proposals which this user has created"
+  proposals: [Proposal!]! @derivedFrom(field: "user")
 
-  "Delegate who will vote on your behalf"
+  "Delegations which the user has made"
+  delegations: [Delegation!]! @derivedFrom(field: "user")
+
+  "Delegate who will vote or propose on user's behalf"
   aaveVotingDelegate: Delegate!
   aavePropositionDelegate: Delegate!
 
-  "AAVE voting power for this address"
+  "aaveBalance + aaveDelegatedInVotingPower - aaveDelegatedOutVotingPower"
   aaveTotalVotingPowerRaw: BigInt!
   aaveTotalVotingPower: BigDecimal!
 
@@ -131,11 +164,11 @@ type Delegate @entity {
   aaveDelegatedOutPropositionPowerRaw: BigInt!
   aaveDelegatedOutPropositionPower: BigDecimal!
 
-  "Delegate who will vote on your behalf"
+  "Delegate who will vote or propose on user's behalf"
   stkAaveVotingDelegate: Delegate!
   stkAavePropositionDelegate: Delegate!
 
-  "Total stkAAVE voting power this address"
+  "stkAaveBalance + stkAaveDelegatedInVotingPower - stkAaveDelegatedOutVotingPower"
   stkAaveTotalVotingPowerRaw: BigInt!
   stkAaveTotalVotingPower: BigDecimal!
 
