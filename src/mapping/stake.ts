@@ -1,12 +1,29 @@
-import { log } from '@graphprotocol/graph-ts';
+import { BigInt, log } from '@graphprotocol/graph-ts';
 import { getOrInitDelegate } from '../helpers/initializers';
-import { VOTING_POWER, BIGINT_ZERO, ZERO_ADDRESS, BIGDECIMAL_ZERO } from '../utils/constants';
-import { Delegate } from '../../generated/schema';
+import {
+  VOTING_POWER,
+  BIGINT_ZERO,
+  ZERO_ADDRESS,
+  VOTING_CONSTANT,
+  PROPOSITION_CONSTANT,
+  STKAAVE_CONSTANT,
+} from '../utils/constants';
+import { Delegate, Delegation } from '../../generated/schema';
 import { toDecimal } from '../utils/converters';
-import { DelegateChanged, Transfer } from '../../generated/AaveStakeToken/StakedTokenV3';
+import { DelegateChanged, Transfer } from '../../generated/StakedTokenV3/StakedTokenV3';
 
-function retotal(delegate: Delegate, type: string): Delegate {
-  if (type === 'vote') {
+enum PowerType {
+  Voting,
+  Proposition,
+  Both,
+}
+
+function retotal(
+  delegate: Delegate,
+  timestamp: BigInt,
+  powerType: PowerType = PowerType.Both
+): void {
+  if (powerType === PowerType.Voting || powerType === PowerType.Both) {
     delegate.stkAaveTotalVotingPowerRaw = delegate.stkAaveBalanceRaw
       .plus(delegate.stkAaveDelegatedInVotingPowerRaw)
       .minus(delegate.stkAaveDelegatedOutVotingPowerRaw);
@@ -15,7 +32,8 @@ function retotal(delegate: Delegate, type: string): Delegate {
       delegate.aaveTotalVotingPowerRaw
     );
     delegate.totalVotingPower = toDecimal(delegate.totalVotingPowerRaw);
-  } else {
+  }
+  if (powerType === PowerType.Proposition || powerType === PowerType.Both) {
     delegate.stkAaveTotalPropositionPowerRaw = delegate.stkAaveBalanceRaw
       .plus(delegate.stkAaveDelegatedInPropositionPowerRaw)
       .minus(delegate.stkAaveDelegatedOutPropositionPowerRaw);
@@ -25,7 +43,8 @@ function retotal(delegate: Delegate, type: string): Delegate {
     );
     delegate.totalPropositionPower = toDecimal(delegate.totalPropositionPowerRaw);
   }
-  return delegate;
+  delegate.lastUpdateTimestamp = timestamp.toI32();
+  delegate.save();
 }
 
 export function handleTransfer(event: Transfer): void {
@@ -53,9 +72,7 @@ export function handleTransfer(event: Transfer): void {
       votingDelegate.stkAaveDelegatedInVotingPower = toDecimal(
         votingDelegate.stkAaveDelegatedInVotingPowerRaw
       );
-      votingDelegate = retotal(votingDelegate, 'vote');
-      votingDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-      votingDelegate.save();
+      retotal(votingDelegate, event.block.timestamp, PowerType.Voting);
       fromHolder.stkAaveDelegatedOutVotingPowerRaw = fromHolder.stkAaveDelegatedOutVotingPowerRaw.minus(
         event.params.value
       );
@@ -72,9 +89,7 @@ export function handleTransfer(event: Transfer): void {
       propositionDelegate.stkAaveDelegatedInPropositionPower = toDecimal(
         propositionDelegate.stkAaveDelegatedInPropositionPowerRaw
       );
-      propositionDelegate = retotal(propositionDelegate, 'proposition');
-      propositionDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-      propositionDelegate.save();
+      retotal(propositionDelegate, event.block.timestamp, PowerType.Proposition);
       fromHolder.stkAaveDelegatedOutPropositionPowerRaw = fromHolder.stkAaveDelegatedOutPropositionPowerRaw.minus(
         event.params.value
       );
@@ -82,10 +97,7 @@ export function handleTransfer(event: Transfer): void {
         fromHolder.stkAaveDelegatedOutPropositionPowerRaw
       );
     }
-    fromHolder = retotal(fromHolder, 'vote');
-    fromHolder = retotal(fromHolder, 'proposition');
-    fromHolder.lastUpdateTimestamp = event.block.timestamp.toI32();
-    fromHolder.save();
+    retotal(fromHolder, event.block.timestamp);
   }
 
   // toHolder
@@ -102,9 +114,7 @@ export function handleTransfer(event: Transfer): void {
       votingDelegate.stkAaveDelegatedInVotingPower = toDecimal(
         votingDelegate.stkAaveDelegatedInVotingPowerRaw
       );
-      votingDelegate = retotal(votingDelegate, 'vote');
-      votingDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-      votingDelegate.save();
+      retotal(votingDelegate, event.block.timestamp, PowerType.Voting);
       toHolder.stkAaveDelegatedOutVotingPowerRaw = toHolder.stkAaveDelegatedOutVotingPowerRaw.plus(
         event.params.value
       );
@@ -121,9 +131,7 @@ export function handleTransfer(event: Transfer): void {
       propositionDelegate.stkAaveDelegatedInPropositionPower = toDecimal(
         propositionDelegate.stkAaveDelegatedInPropositionPowerRaw
       );
-      propositionDelegate = retotal(propositionDelegate, 'proposition');
-      propositionDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-      propositionDelegate.save();
+      retotal(propositionDelegate, event.block.timestamp, PowerType.Proposition);
       toHolder.stkAaveDelegatedOutPropositionPowerRaw = toHolder.stkAaveDelegatedOutPropositionPowerRaw.plus(
         event.params.value
       );
@@ -131,18 +139,25 @@ export function handleTransfer(event: Transfer): void {
         toHolder.stkAaveDelegatedOutPropositionPowerRaw
       );
     }
-    toHolder = retotal(toHolder, 'vote');
-    toHolder = retotal(toHolder, 'proposition');
-    toHolder.lastUpdateTimestamp = event.block.timestamp.toI32();
-    toHolder.save();
+    retotal(toHolder, event.block.timestamp);
   }
 }
 
 export function handleDelegateChanged(event: DelegateChanged): void {
   let delegator = getOrInitDelegate(event.params.delegator.toHexString());
   let newDelegate = getOrInitDelegate(event.params.delegatee.toHexString());
+  let delegationId =
+    delegator.id + ':' + newDelegate.id + ':stkaave:' + event.transaction.hash.toHexString();
+  let delegation = new Delegation(delegationId);
+  delegation.user = delegator.id;
+  delegation.timestamp = event.block.timestamp.toI32();
+  delegation.delegate = newDelegate.id;
+  delegation.asset = STKAAVE_CONSTANT;
+  delegation.amountRaw = delegator.aaveBalanceRaw;
+  delegation.amount = delegator.aaveBalance;
 
   if (event.params.delegationType == VOTING_POWER) {
+    delegation.powerType = VOTING_CONSTANT;
     let previousDelegate = getOrInitDelegate(delegator.stkAaveVotingDelegate);
     // Subtract from previous delegate if delegator was not self-delegating
     if (previousDelegate.id != delegator.id) {
@@ -173,17 +188,12 @@ export function handleDelegateChanged(event: DelegateChanged): void {
       );
     }
 
-    previousDelegate = retotal(previousDelegate, 'vote');
-    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    previousDelegate.save();
-    delegator = retotal(delegator, 'vote');
+    retotal(previousDelegate, event.block.timestamp, PowerType.Voting);
     delegator.stkAaveVotingDelegate = newDelegate.id;
-    delegator.lastUpdateTimestamp = event.block.timestamp.toI32();
-    delegator.save();
-    newDelegate = retotal(newDelegate, 'vote');
-    newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    newDelegate.save();
+    retotal(delegator, event.block.timestamp, PowerType.Voting);
+    retotal(newDelegate, event.block.timestamp, PowerType.Voting);
   } else {
+    delegation.powerType = PROPOSITION_CONSTANT;
     let previousDelegate = getOrInitDelegate(delegator.stkAavePropositionDelegate);
     // Subtract from previous delegate if delegator was not self-delegating
     if (previousDelegate.id != delegator.id) {
@@ -213,15 +223,10 @@ export function handleDelegateChanged(event: DelegateChanged): void {
         newDelegate.stkAaveDelegatedInPropositionPowerRaw
       );
     }
-    previousDelegate = retotal(previousDelegate, 'proposition');
-    previousDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    previousDelegate.save();
-    delegator = retotal(delegator, 'proposition');
+    delegation.save();
+    retotal(previousDelegate, event.block.timestamp, PowerType.Proposition);
     delegator.stkAavePropositionDelegate = newDelegate.id;
-    delegator.lastUpdateTimestamp = event.block.timestamp.toI32();
-    delegator.save();
-    newDelegate = retotal(newDelegate, 'proposition');
-    newDelegate.lastUpdateTimestamp = event.block.timestamp.toI32();
-    newDelegate.save();
+    retotal(delegator, event.block.timestamp, PowerType.Proposition);
+    retotal(newDelegate, event.block.timestamp, PowerType.Proposition);
   }
 }
