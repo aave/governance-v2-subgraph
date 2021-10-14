@@ -1,11 +1,4 @@
-import {
-  ipfs,
-  json,
-  Bytes,
-  log,
-  JSONValue,
-  JSONValueKind,
-} from '@graphprotocol/graph-ts/index';
+import { ipfs, json, Bytes, log, JSONValue, JSONValueKind } from '@graphprotocol/graph-ts/index';
 
 import { Proposal, Vote, Executor } from '../../generated/schema';
 import { IExecutor } from '../../generated/AaveGovernanceV2/IExecutor';
@@ -19,9 +12,7 @@ import {
   ExecutorAuthorized,
   ExecutorUnauthorized,
 } from '../../generated/AaveGovernanceV2/AaveGovernanceV2';
-import {
-  NA,
-} from '../utils/constants';
+import { NA } from '../utils/constants';
 import { getOrInitProposal } from '../helpers/initializers';
 
 enum VoteType {
@@ -73,7 +64,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
     proposal.discussions = NA;
   }
   if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
-      proposal.aipNumber = aipNumber.toBigInt();
+    proposal.aipNumber = aipNumber.toBigInt();
   }
 
   if (shortDescription) {
@@ -83,7 +74,12 @@ export function handleProposalCreated(event: ProposalCreated): void {
   }
 
   let govStrategyInst = GovernanceStrategy.bind(event.params.strategy);
-  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(event.params.startBlock);
+  proposal.totalPropositionSupply = govStrategyInst.getTotalPropositionSupplyAt(
+    event.params.startBlock
+  );
+
+  log.error(`data::: {} `, [data.toString()]);
+
   proposal.totalVotingSupply = govStrategyInst.getTotalVotingSupplyAt(event.params.startBlock);
 
   proposal.govContract = event.address;
@@ -154,7 +150,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
     proposal.totalCurrentVoters = proposal.totalCurrentVoters + 1;
     proposal.lastUpdateBlock = event.block.number;
     proposal.lastUpdateTimestamp = event.block.timestamp.toI32();
-    proposal.state = "Active";
+    proposal.state = 'Active';
     proposal.save();
   }
 
@@ -174,7 +170,7 @@ export function handleExecutorAuthorized(event: ExecutorAuthorized): void {
     executor.authorized = true;
   } else {
     executor = new Executor(event.params.executor.toHexString());
-    let executorContract =  IExecutor.bind(event.params.executor);
+    let executorContract = IExecutor.bind(event.params.executor);
     executor.authorized = true;
     executor.propositionThreshold = executorContract.PROPOSITION_THRESHOLD();
     executor.votingDuration = executorContract.VOTING_DURATION();
@@ -195,7 +191,7 @@ export function handleExecutorUnauthorized(event: ExecutorUnauthorized): void {
   if (executor) {
     executor.authorized = false;
     executor.save();
-  } 
+  }
 }
 // export function handleGovernanceStrategyChanged(event: GovernanceStrategyChanged): void {
 // }
