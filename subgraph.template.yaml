@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 description: Aave governance V2 subgraph
-repository: https://github.com/aave/governance-v2-subgraph
+repository: https://github.com/aave/governance-delegation-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
