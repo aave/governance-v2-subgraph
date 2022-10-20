@@ -162,6 +162,7 @@ export function handleVoteEmitted(event: VoteEmitted): void {
   // Creating it anyway since we will want to account for this event data, even though it should've never happened
   voterDel = getOrInitDelegate(event.params.voter.toHexString());
   voterDel.numVotes = voterDel.numVotes + 1;
+  voterDel.lastUpdateTimestamp = event.block.timestamp.toI32();
   voterDel.save();
   let id = event.params.voter.toHexString() + ':' + event.params.id.toString();
   let vote = Vote.load(id) || new Vote(id);
