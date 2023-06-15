@@ -56,7 +56,7 @@ export function handleProposalCreated(event: ProposalCreated): void {
   if (author) {
     proposal.author = author.toString();
   }
-  if (discussions) {
+  if (!discussions.isNull() && discussions.kind == JSONValueKind.STRING) {
     proposal.discussions = discussions.toString();
   }
   if (!aipNumber.isNull() && aipNumber.kind == JSONValueKind.NUMBER) {
