@@ -1,5 +1,7 @@
 # Subgraph for Aave Protocol V2
 
+https://thegraph.com/hosted-service/subgraph/aave/governance-delegation
+
 ## Development
 
 ```bash
